@@ -1,0 +1,13 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background-color: #f4f6f9;
+    padding: 20px;
+    margin: 0;
+}
+.ui-panelGrid .ui-panelGrid-cell {
+    padding: 8px !important;
+}
+.action-container {
+    margin-top: 15px;
+}
+

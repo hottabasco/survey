@@ -1,0 +1,6 @@
+build/
+dist/
+.ant-targets-build.xml
+*.war
+*.class
+.DS_Store

@@ -1,0 +1,41 @@
+<project name="survey" default="war" basedir=".">
+    <property file="build.properties"/>
+
+    <path id="compile.classpath">
+        <fileset dir="${tomee.home}/lib">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${web.dir}/WEB-INF/lib" erroronmissingdir="false">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="init" depends="clean">
+        <mkdir dir="${build.dir}/WEB-INF/classes"/>
+        <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${build.dir}/WEB-INF/classes" classpathref="compile.classpath" includeantruntime="false" source="17" target="17"/>
+    </target>
+
+    <target name="war" depends="compile">
+        <copy todir="${build.dir}">
+            <fileset dir="${web.dir}"/>
+        </copy>
+        <war destfile="${dist.dir}/${war.name}" webxml="${build.dir}/WEB-INF/web.xml">
+            <fileset dir="${build.dir}">
+                <exclude name="WEB-INF/web.xml"/>
+            </fileset>
+        </war>
+    </target>
+
+    <target name="deploy" depends="war">
+        <copy file="${dist.dir}/${war.name}" todir="${tomee.home}/webapps"/>
+    </target>
+</project>
