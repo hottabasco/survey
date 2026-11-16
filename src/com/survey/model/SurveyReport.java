@@ -2,9 +2,14 @@ package com.survey.model;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SurveyReport implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    // Automatically inherits settings from the "com.survey" parent logger
+    private static final Logger logger = Logger.getLogger(SurveyReport.class.getName());
 
     private BigDecimal itemId;
     private String type;
@@ -16,7 +21,10 @@ public class SurveyReport implements Serializable {
     private String tranche;
     private String notes;
 
-    public SurveyReport() {}
+    public SurveyReport() 
+    {
+        logger.log(Level.INFO, "entering SurveyReport");
+    }
 
     public BigDecimal getItemId() { return itemId; }
     public void setItemId(BigDecimal itemId) { this.itemId = itemId; }

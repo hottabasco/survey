@@ -9,6 +9,8 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Named("surveyController")
 @ViewScoped
@@ -20,8 +22,12 @@ public class SurveyController implements Serializable {
     private List<SurveyReport> reports;
     private SurveyReport selectedReport;
 
+    // Automatically inherits settings from the "com.survey" parent logger
+    private static final Logger logger = Logger.getLogger(DatabaseService.class.getName());
+
     @PostConstruct
     public void init() {
+        logger.log(Level.INFO, "SurveyController init");
         loadReports();
         prepareNewReport();
     }

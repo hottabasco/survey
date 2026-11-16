@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @jakarta.enterprise.context.ApplicationScoped
 public class DatabaseService implements Serializable {
@@ -14,11 +16,15 @@ public class DatabaseService implements Serializable {
     private static final String USER = "postgres";
     private static final String PWD = "pwd1";
 
+    // Automatically inherits settings from the "com.survey" parent logger
+    private static final Logger logger = Logger.getLogger(DatabaseService.class.getName());
+
     static {
         try {
             Class.forName("org.postgresql.Driver");
+            logger.log(Level.INFO, "JDBC driver loaded");
         } catch (ClassNotFoundException e) {
-            java.util.logging.Logger.getLogger(DatabaseService.class.getName()).log(java.util.logging.Level.SEVERE, "JDBC Error", e);
+            logger.log(Level.SEVERE, "Error loading JDBC driver", e);
         }
     }
 
