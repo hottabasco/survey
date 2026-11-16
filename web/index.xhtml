@@ -60,9 +60,50 @@
             </h:form>
 
             <!-- Right Main Area: Dynamic Data Display Grid Component -->
+            <!-- Right Main Area: Dynamic Data Display Grid Component -->
             <h:form id="tableForm" styleClass="right-panel">
-                <p:dataTable id="reportsTable" value="#{surveyController.reports}" var="report" 
-                             paginator="true" rows="10" selectionMode="single" selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
+                <p:defaultCommand target="reportsTable:filterBtn" />
+
+                <p:dataTable id="reportsTable" widgetVar="reportsTableWidget"
+                             value="#{surveyController.reports}" var="report" 
+                             paginator="true" rows="10" selectionMode="single" 
+                             selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
+
+                    <f:facet name="header">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <span style="font-weight: bold; font-size: 1.1em;">
+                                Survey Reports
+                                <h:panelGroup rendered="#{not empty surveyController.trancheFilter}">
+                                    <span style="font-weight: normal; font-size: 0.85em; margin-left: 8px; color: #0275d8;">
+                                        (Filtered by Tranche: "#{surveyController.trancheFilter}")
+                                    </span>
+                                </h:panelGroup>
+                            </span>
+
+                            <div class="ui-inputgroup">
+                                <p:inputText id="trancheFilterInput" 
+                                             value="#{surveyController.trancheFilter}" 
+                                             placeholder="Filter by Tranche..." 
+                                             style="width: 200px;" />
+                                
+                                <p:commandButton id="filterBtn" 
+                                                 value="Apply Filter" 
+                                                 action="#{surveyController.loadReports()}" 
+                                                 update="reportsTable" 
+                                                 oncomplete="PF('reportsTableWidget').getPaginator().setPage(0);"
+                                                 icon="pi pi-filter" />
+                                
+                                <p:commandButton value="Show All" 
+                                                 action="#{surveyController.clearFilter()}" 
+                                                 update="reportsTable" 
+                                                 oncomplete="PF('reportsTableWidget').getPaginator().setPage(0);"
+                                                 icon="pi pi-times" 
+                                                 styleClass="ui-button-secondary" 
+                                                 process="@this"
+                                                 disabled="#{empty surveyController.trancheFilter}" />
+                            </div>
+                        </div>
+                    </f:facet>
                     
                     <p:ajax event="rowSelect" update=":surveyForm" />
 
@@ -89,6 +130,7 @@
                     </p:column>
                 </p:dataTable>
             </h:form>
+
         </div>
     </h:body>
 </html>

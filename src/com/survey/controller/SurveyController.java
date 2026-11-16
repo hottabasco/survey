@@ -21,9 +21,10 @@ public class SurveyController implements Serializable {
     private DatabaseService dbService;
     private List<SurveyReport> reports;
     private SurveyReport selectedReport;
+    private String trancheFilter;
 
     // Automatically inherits settings from the "com.survey" parent logger
-    private static final Logger logger = Logger.getLogger(DatabaseService.class.getName());
+    private static final Logger logger = Logger.getLogger(SurveyController.class.getName());
 
     @PostConstruct
     public void init() {
@@ -33,7 +34,12 @@ public class SurveyController implements Serializable {
     }
 
     public void loadReports() {
-        reports = dbService.findAll();
+        reports = dbService.findByTranche(trancheFilter);
+    }
+
+    public void clearFilter() {
+        this.trancheFilter = null;
+        loadReports();
     }
 
     public void prepareNewReport() {
@@ -56,5 +62,7 @@ public class SurveyController implements Serializable {
     public List<SurveyReport> getReports() { return reports; }
     public SurveyReport getSelectedReport() { return selectedReport; }
     public void setSelectedReport(SurveyReport selectedReport) { this.selectedReport = selectedReport; }
+    public String getTrancheFilter() { return trancheFilter; }
+    public void setTrancheFilter(String trancheFilter) { this.trancheFilter = trancheFilter; }
 }
 

@@ -33,28 +33,42 @@ public class DatabaseService implements Serializable {
     }
 
     public List<SurveyReport> findAll() {
+        return findByTranche(null);
+    }
+
+    public List<SurveyReport> findByTranche(String tranche) {
         List<SurveyReport> list = new ArrayList<>();
-        String sql = "SELECT item_id, \"Type\", \"Element Type\", \"Location\", \"Description\", \"Maintenance Required\", \"Priority\", \"Tranche\", \"Notes\" FROM public.survey_report ORDER BY item_id ASC";
-        
+        boolean hasFilter = (tranche != null && !tranche.trim().isEmpty());
+
+        String sql = "SELECT item_id, \"Type\", \"Element Type\", \"Location\", \"Description\", \"Maintenance Required\", \"Priority\", \"Tranche\", \"Notes\" "
+                   + "FROM public.survey_report "
+                   + (hasFilter ? "WHERE \"Tranche\" = ? " : "")
+                   + "ORDER BY item_id ASC";
+
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
-            while (rs.next()) {
-                SurveyReport r = new SurveyReport();
-                r.setItemId(rs.getBigDecimal("item_id"));
-                r.setType(rs.getString(2));
-                r.setElementType(rs.getString(3));
-                r.setLocation(rs.getString(4));
-                r.setDescription(rs.getString(5));
-                r.setMaintenanceRequired(rs.getString(6));
-                r.setPriority(rs.getObject(7) != null ? rs.getBoolean(7) : null);
-                r.setTranche(rs.getString(8));
-                r.setNotes(rs.getString(9));
-                list.add(r);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            if (hasFilter) {
+                ps.setString(1, tranche.trim());
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    SurveyReport r = new SurveyReport();
+                    r.setItemId(rs.getBigDecimal("item_id"));
+                    r.setType(rs.getString(2));
+                    r.setElementType(rs.getString(3));
+                    r.setLocation(rs.getString(4));
+                    r.setDescription(rs.getString(5));
+                    r.setMaintenanceRequired(rs.getString(6));
+                    r.setPriority(rs.getObject(7) != null ? rs.getBoolean(7) : null);
+                    r.setTranche(rs.getString(8));
+                    r.setNotes(rs.getString(9));
+                    list.add(r);
+                }
             }
         } catch (SQLException e) {
-            java.util.logging.Logger.getLogger(DatabaseService.class.getName()).log(java.util.logging.Level.SEVERE, "JDBC Error", e);
+            logger.log(Level.SEVERE, "JDBC Error", e);
         }
         return list;
     }
@@ -87,7 +101,7 @@ public class DatabaseService implements Serializable {
             
             ps.executeUpdate();
         } catch (SQLException e) {
-            java.util.logging.Logger.getLogger(DatabaseService.class.getName()).log(java.util.logging.Level.SEVERE, "JDBC Error", e);
+            logger.log(Level.SEVERE, "JDBC Error", e);
         }
     }
 }
