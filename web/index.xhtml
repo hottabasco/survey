@@ -16,77 +16,80 @@
 
         <h2>Survey Records Control Panel</h2>
 
-        <!-- Input and Edit Form Area -->
-        <h:form id="surveyForm">
-            <p:panel header="Create / Update Survey Report Entry">
-                <p:panelGrid columns="4" layout="flex" styleClass="ui-fluid">
-                    <p:outputLabel for="itemId" value="Item ID:"/>
-                    <p:inputNumber id="itemId" value="#{surveyController.selectedReport.itemId}" decimalPlaces="0" required="true"/>
+        <div class="main-layout">
+            <!-- Left Sidebar: Input and Edit Form Area -->
+            <h:form id="surveyForm" styleClass="left-panel">
+                <p:panel header="Create / Update Survey Report Entry">
+                    <p:panelGrid columns="2" layout="flex" styleClass="ui-fluid"
+                                 columnClasses="col-12 md:col-4, col-12 md:col-8">
+                        <p:outputLabel for="itemId" value="Item ID:"/>
+                        <p:inputNumber id="itemId" value="#{surveyController.selectedReport.itemId}" decimalPlaces="0" required="true"/>
 
-                    <p:outputLabel for="type" value="Type:"/>
-                    <p:inputText id="type" value="#{surveyController.selectedReport.type}"/>
+                        <p:outputLabel for="type" value="Type:"/>
+                        <p:inputText id="type" value="#{surveyController.selectedReport.type}"/>
 
-                    <p:outputLabel for="elemType" value="Element Type:"/>
-                    <p:inputText id="elemType" value="#{surveyController.selectedReport.elementType}" required="true"/>
+                        <p:outputLabel for="elemType" value="Element Type:"/>
+                        <p:inputText id="elemType" value="#{surveyController.selectedReport.elementType}" required="true"/>
 
-                    <p:outputLabel for="location" value="Location:"/>
-                    <p:inputText id="location" value="#{surveyController.selectedReport.location}" required="true"/>
+                        <p:outputLabel for="location" value="Location:"/>
+                        <p:inputText id="location" value="#{surveyController.selectedReport.location}" required="true"/>
 
-                    <p:outputLabel for="description" value="Description:"/>
-                    <p:inputTextarea id="description" value="#{surveyController.selectedReport.description}" required="true" rows="1"/>
+                        <p:outputLabel for="description" value="Description:"/>
+                        <p:inputTextarea id="description" value="#{surveyController.selectedReport.description}" required="true" rows="2"/>
 
-                    <p:outputLabel for="maint" value="Maintenance Required:"/>
-                    <p:inputText id="maint" value="#{surveyController.selectedReport.maintenanceRequired}" required="true"/>
+                        <p:outputLabel for="maint" value="Maintenance Required:"/>
+                        <p:inputText id="maint" value="#{surveyController.selectedReport.maintenanceRequired}" required="true"/>
 
-                    <p:outputLabel for="tranche" value="Tranche:"/>
-                    <p:inputText id="tranche" value="#{surveyController.selectedReport.tranche}"/>
+                        <p:outputLabel for="tranche" value="Tranche:"/>
+                        <p:inputText id="tranche" value="#{surveyController.selectedReport.tranche}"/>
 
-                    <p:outputLabel for="priority" value="High Priority:"/>
-                    <p:selectBooleanCheckbox id="priority" value="#{surveyController.selectedReport.priority}"/>
+                        <p:outputLabel for="priority" value="High Priority:"/>
+                        <p:selectBooleanCheckbox id="priority" value="#{surveyController.selectedReport.priority}"/>
 
-                    <p:outputLabel for="notes" value="Notes:"/>
-                    <p:inputTextarea id="notes" value="#{surveyController.selectedReport.notes}" rows="1" cols="30"/>
-                </p:panelGrid>
+                        <p:outputLabel for="notes" value="Notes:"/>
+                        <p:inputTextarea id="notes" value="#{surveyController.selectedReport.notes}" rows="2"/>
+                    </p:panelGrid>
 
-                <div class="action-container">
-                    <p:commandButton value="Save / Upsert Record" action="#{surveyController.saveReport()}" 
-                                     update="surveyForm :tableForm:reportsTable :growlMessages" icon="pi pi-check" style="width: auto; margin-right:10px;"/>
-                    <p:commandButton value="Clear Form" action="#{surveyController.prepareNewReport()}" 
-                                     update="surveyForm" icon="pi pi-refresh" styleClass="ui-button-secondary" style="width: auto;" process="@this"/>
-                </div>
-            </p:panel>
-        </h:form>
+                    <div class="action-container" style="margin-top: 15px;">
+                        <p:commandButton value="Save / Upsert Record" action="#{surveyController.saveReport()}" 
+                                         update="surveyForm :tableForm:reportsTable :growlMessages" icon="pi pi-check" style="width: auto; margin-right:10px;"/>
+                        <p:commandButton value="Clear Form" action="#{surveyController.prepareNewReport()}" 
+                                         update="surveyForm" icon="pi pi-refresh" styleClass="ui-button-secondary" style="width: auto;" process="@this"/>
+                    </div>
+                </p:panel>
+            </h:form>
 
-        <!-- Dynamic Data Display Grid Component -->
-        <h:form id="tableForm">
-            <p:dataTable id="reportsTable" value="#{surveyController.reports}" var="report" 
-                         paginator="true" rows="10" selectionMode="single" selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
-                
-                <p:ajax event="rowSelect" update=":surveyForm" />
+            <!-- Right Main Area: Dynamic Data Display Grid Component -->
+            <h:form id="tableForm" styleClass="right-panel">
+                <p:dataTable id="reportsTable" value="#{surveyController.reports}" var="report" 
+                             paginator="true" rows="10" selectionMode="single" selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
+                    
+                    <p:ajax event="rowSelect" update=":surveyForm" />
 
-                <p:column headerText="Item ID" sortBy="#{report.itemId}">
-                    <h:outputText value="#{report.itemId}" />
-                </p:column>
-                <p:column headerText="Type">
-                    <h:outputText value="#{report.type}" />
-                </p:column>
-                <p:column headerText="Element Type">
-                    <h:outputText value="#{report.elementType}" />
-                </p:column>
-                <p:column headerText="Location">
-                    <h:outputText value="#{report.location}" />
-                </p:column>
-                <p:column headerText="Maintenance">
-                    <h:outputText value="#{report.maintenanceRequired}" />
-                </p:column>
-                <p:column headerText="Priority" width="90">
-                    <h:outputText value="#{report.priority ? 'YES' : 'NO'}" style="font-weight: bold; color: #{report.priority ? 'red' : 'green'};" />
-                </p:column>
-                <p:column headerText="Tranche">
-                    <h:outputText value="#{report.tranche}" />
-                </p:column>
-            </p:dataTable>
-        </h:form>
+                    <p:column headerText="Item ID" sortBy="#{report.itemId}">
+                        <h:outputText value="#{report.itemId}" />
+                    </p:column>
+                    <p:column headerText="Type">
+                        <h:outputText value="#{report.type}" />
+                    </p:column>
+                    <p:column headerText="Element Type">
+                        <h:outputText value="#{report.elementType}" />
+                    </p:column>
+                    <p:column headerText="Location">
+                        <h:outputText value="#{report.location}" />
+                    </p:column>
+                    <p:column headerText="Maintenance">
+                        <h:outputText value="#{report.maintenanceRequired}" />
+                    </p:column>
+                    <p:column headerText="Priority" width="90">
+                        <h:outputText value="#{report.priority ? 'YES' : 'NO'}" style="font-weight: bold; color: #{report.priority ? 'red' : 'green'};" />
+                    </p:column>
+                    <p:column headerText="Tranche">
+                        <h:outputText value="#{report.tranche}" />
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+        </div>
     </h:body>
 </html>
 
