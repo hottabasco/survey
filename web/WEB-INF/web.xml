@@ -6,17 +6,33 @@
 
     <display-name>Survey Application</display-name>
 
-    <listener>
-        <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
-    </listener>
-
     <context-param>
         <param-name>jakarta.faces.PROJECT_STAGE</param-name>
         <param-value>Development</param-value>
     </context-param>
 
+    <context-param>
+        <param-name>jakarta.faces.STATE_SAVING_METHOD</param-name>
+        <param-value>client</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>org.apache.myfaces.SECRET</param-name>
+        <param-value>ZlkZNJtT1ZrdLIQTQZ+Gag==</param-value>
+    </context-param>
+
+    <listener>
+        <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
+    </listener>
+
     <welcome-file-list>
         <welcome-file>index.xhtml</welcome-file>
     </welcome-file-list>
+
+    <error-page>
+        <exception-type>jakarta.faces.application.ViewExpiredException</exception-type>
+        <location>/index.xhtml</location>
+    </error-page>
+
 </web-app>
 

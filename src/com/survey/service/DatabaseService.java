@@ -1,20 +1,25 @@
 package com.survey.service;
 
 import com.survey.model.SurveyReport;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@jakarta.enterprise.context.ApplicationScoped
+@ApplicationScoped
 public class DatabaseService implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private static final String URL = "jdbc:postgresql://127.0.0.1:5432/NTM";
-    private static final String USER = "postgres";
-    private static final String PWD = "pwd1";
+    private String dbUrl;
+    private String dbUser;
+    private String dbPassword;
 
     // Automatically inherits settings from the "com.survey" parent logger
     private static final Logger logger = Logger.getLogger(DatabaseService.class.getName());
@@ -28,8 +33,27 @@ public class DatabaseService implements Serializable {
         }
     }
 
+    @PostConstruct
+    public void init() {
+        Properties props = new Properties();
+        try (InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("survey.properties")) {
+            if (input == null) {
+                logger.log(Level.SEVERE, "Unable to find survey.properties on the classpath");
+                throw new IllegalStateException("Missing survey.properties on classpath");
+            }
+            props.load(input);
+            this.dbUrl = props.getProperty("db.url");
+            this.dbUser = props.getProperty("db.user");
+            this.dbPassword = props.getProperty("db.password");
+            logger.log(Level.INFO, "Database configuration loaded from survey.properties");
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error reading survey.properties", e);
+            throw new IllegalStateException("Failed to load survey.properties", e);
+        }
+    }
+
     private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PWD);
+        return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 
     public List<SurveyReport> findAll() {
