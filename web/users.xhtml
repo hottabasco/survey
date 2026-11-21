@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>User Management</title>
+    <meta charset="UTF-8"/>
+    <h:outputStylesheet library="css" name="style.css" />
+</h:head>
+
+<h:body>
+    <p:growl id="growlMessages" showDetail="true" life="4000" />
+
+    <h2>User Accounts Management</h2>
+
+    <div class="main-layout">
+        <!-- Left Form: Create / Update User -->
+        <h:form id="userForm" styleClass="left-panel">
+            <p:panel header="Create / Update User">
+                <p:panelGrid columns="2" layout="flex" styleClass="ui-fluid"
+                             columnClasses="col-12 md:col-4, col-12 md:col-8">
+                    <p:outputLabel for="usrId" value="User ID:"/>
+                    <p:inputNumber id="usrId" value="#{userController.selectedUser.usrId}" decimalPlaces="0" required="true"/>
+
+                    <p:outputLabel for="acct" value="Account Name:"/>
+                    <p:inputText id="acct" value="#{userController.selectedUser.accountName}" required="true"/>
+
+                    <p:outputLabel for="fname" value="First Name:"/>
+                    <p:inputText id="fname" value="#{userController.selectedUser.firstName}" required="true"/>
+
+                    <p:outputLabel for="lname" value="Last Name:"/>
+                    <p:inputText id="lname" value="#{userController.selectedUser.lastName}" required="true"/>
+
+                    <p:outputLabel for="role" value="Role:"/>
+                    <p:selectOneMenu id="role" value="#{userController.selectedUser.role}" required="true">
+                        <f:selectItem itemLabel="ADMIN" itemValue="ADMIN" />
+                        <f:selectItem itemLabel="EDITOR" itemValue="EDITOR" />
+                        <f:selectItem itemLabel="VIEWER" itemValue="VIEWER" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="pwd" value="Password:"/>
+                    <p:password id="pwd" value="#{userController.selectedUser.plainPassword}" 
+                                feedback="false" placeholder="Leave blank to keep existing"/>
+
+                    <p:outputLabel for="startDate" value="Start Date:"/>
+                    <p:datePicker id="startDate" value="#{userController.selectedUser.startDate}" pattern="yyyy-MM-dd" required="true"/>
+
+                    <p:outputLabel for="endDate" value="End Date:"/>
+                    <p:datePicker id="endDate" value="#{userController.selectedUser.endDate}" pattern="yyyy-MM-dd" showButtonBar="true"/>
+                </p:panelGrid>
+
+                <div class="action-container" style="margin-top: 15px;">
+                    <p:commandButton value="Save User" action="#{userController.saveUser()}" 
+                                     update="userForm :usersTableForm:usersTable :growlMessages" icon="pi pi-check" style="width: auto; margin-right: 10px;"/>
+                    <p:commandButton value="New / Clear" action="#{userController.prepareNewUser()}" 
+                                     update="userForm" icon="pi pi-refresh" styleClass="ui-button-secondary" style="width: auto;" process="@this"/>
+                </div>
+            </p:panel>
+        </h:form>
+
+        <!-- Right Table: User List -->
+        <h:form id="usersTableForm" styleClass="right-panel">
+            <p:dataTable id="usersTable" value="#{userController.users}" var="u"
+                         selectionMode="single" selection="#{userController.selectedUser}" rowKey="#{u.usrId}">
+                <p:ajax event="rowSelect" update=":userForm" />
+
+                <p:column headerText="ID" width="60"><h:outputText value="#{u.usrId}"/></p:column>
+                <p:column headerText="Account"><h:outputText value="#{u.accountName}"/></p:column>
+                <p:column headerText="Name"><h:outputText value="#{u.firstName} #{u.lastName}"/></p:column>
+                <p:column headerText="Role"><h:outputText value="#{u.role}"/></p:column>
+                <p:column headerText="Start Date"><h:outputText value="#{u.startDate}"/></p:column>
+                <p:column headerText="End Date"><h:outputText value="#{empty u.endDate ? 'Active (No End)' : u.endDate}"/></p:column>
+            </p:dataTable>
+        </h:form>
+    </div>
+
+    <!-- Bottom Footer Bar -->
+    <h:form id="logoutForm">
+        <div class="page-footer">
+            <span>
+                Logged in as: <strong>#{loginController.currentUser.firstName} #{loginController.currentUser.lastName}</strong>
+                <span style="color: #6c757d; font-size: 0.9em;">(#{loginController.currentUser.role})</span>
+            </span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <p:button value="Back to Survey Reports" outcome="index" icon="pi pi-arrow-left" styleClass="ui-button-outlined" />
+                <p:commandButton value="Logout" action="#{loginController.logout()}" icon="pi pi-sign-out" styleClass="ui-button-secondary ui-button-outlined" process="@this" />
+            </div>
+        </div>
+    </h:form>
+</h:body>
+</html>
+

@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.survey.model.User;
 import org.mindrot.jbcrypt.BCrypt; // From jbcrypt-0.4.j
+import java.time.LocalDate;
 
 @ApplicationScoped
 public class DatabaseService implements Serializable {
@@ -145,4 +146,85 @@ public class DatabaseService implements Serializable {
 		}
 		return null;
 	}
+
+	public List < User > findAllUsers() {
+		List < User > list = new ArrayList < > ();
+		String sql = "SELECT usr_id, account_name, first_name, last_name, role, start_date, end_date " +
+			"FROM public.usr ORDER BY usr_id ASC";
+
+		try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+			while(rs.next()) {
+				User u = new User();
+				u.setUsrId(rs.getBigDecimal("usr_id"));
+				u.setAccountName(rs.getString("account_name"));
+				u.setFirstName(rs.getString("first_name"));
+				u.setLastName(rs.getString("last_name"));
+				u.setRole(rs.getString("role"));
+				Date sd = rs.getDate("start_date");
+				u.setStartDate(sd != null ? sd.toLocalDate() : null);
+				Date ed = rs.getDate("end_date");
+				u.setEndDate(ed != null ? ed.toLocalDate() : null);
+				list.add(u);
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "Error fetching users", e);
+		}
+		return list;
+	}
+
+	public void saveUser(User u) throws SQLException {
+		boolean hasNewPassword = (u.getPlainPassword() != null && !u.getPlainPassword().trim().isEmpty());
+
+		if(hasNewPassword) {
+			String hashed = BCrypt.hashpw(u.getPlainPassword().trim(), BCrypt.gensalt());
+			String sql = "INSERT INTO public.usr (usr_id, account_name, first_name, last_name, role, password, start_date, end_date) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+				"ON CONFLICT (usr_id) DO UPDATE SET " +
+				"account_name = ?, first_name = ?, last_name = ?, role = ?, password = ?, start_date = ?, end_date = ?";
+
+			try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+				ps.setBigDecimal(1, u.getUsrId());
+				ps.setString(2, u.getAccountName().trim());
+				ps.setString(3, u.getFirstName().trim());
+				ps.setString(4, u.getLastName().trim());
+				ps.setString(5, u.getRole());
+				ps.setString(6, hashed);
+				ps.setDate(7, u.getStartDate() != null ? Date.valueOf(u.getStartDate()) : Date.valueOf(LocalDate.now()));
+				if(u.getEndDate() != null) ps.setDate(8, Date.valueOf(u.getEndDate()));
+				else ps.setNull(8, Types.DATE);
+
+				ps.setString(9, u.getAccountName().trim());
+				ps.setString(10, u.getFirstName().trim());
+				ps.setString(11, u.getLastName().trim());
+				ps.setString(12, u.getRole());
+				ps.setString(13, hashed);
+				ps.setDate(14, u.getStartDate() != null ? Date.valueOf(u.getStartDate()) : Date.valueOf(LocalDate.now()));
+				if(u.getEndDate() != null) ps.setDate(15, Date.valueOf(u.getEndDate()));
+				else ps.setNull(15, Types.DATE);
+
+				ps.executeUpdate();
+			}
+		} else {
+			// Update existing user without overwriting password
+			String sql = "UPDATE public.usr SET account_name = ?, first_name = ?, last_name = ?, role = ?, start_date = ?, end_date = ? " +
+				"WHERE usr_id = ?";
+			try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+				ps.setString(1, u.getAccountName().trim());
+				ps.setString(2, u.getFirstName().trim());
+				ps.setString(3, u.getLastName().trim());
+				ps.setString(4, u.getRole());
+				ps.setDate(5, u.getStartDate() != null ? Date.valueOf(u.getStartDate()) : Date.valueOf(LocalDate.now()));
+				if(u.getEndDate() != null) ps.setDate(6, Date.valueOf(u.getEndDate()));
+				else ps.setNull(6, Types.DATE);
+				ps.setBigDecimal(7, u.getUsrId());
+
+				int updated = ps.executeUpdate();
+				if(updated == 0) {
+					throw new SQLException("Password is required when creating a new user.");
+				}
+			}
+		}
+	}
+
 }

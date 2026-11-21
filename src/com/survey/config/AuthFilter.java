@@ -3,12 +3,10 @@ package com.survey.config;
 import com.survey.controller.LoginController;
 import jakarta.inject.Inject;
 import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebFilter("/*")
 public class AuthFilter implements Filter {
 
     @Inject
@@ -28,8 +26,16 @@ public class AuthFilter implements Filter {
                           || uri.startsWith(contextPath + "/resources/");
         boolean isLoggedIn = (loginController != null && loginController.isLoggedIn());
 
+        // Restrict users.xhtml strictly to ADMIN role
+        if (isLoggedIn && uri.startsWith(contextPath + "/users.xhtml")) {
+            String role = loginController.getCurrentUser().getRole();
+            if (!"ADMIN".equalsIgnoreCase(role)) {
+                response.sendRedirect(contextPath + "/index.xhtml");
+                return;
+            }
+        }
+
         if (isLoggedIn || isLoginPage || isResource) {
-            // Prevent browser caching of protected pages so "Back" button doesn't work after logout
             if (!isResource) {
                 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
                 response.setHeader("Pragma", "no-cache");

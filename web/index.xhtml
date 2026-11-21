@@ -18,7 +18,7 @@
 
         <div class="main-layout">
             <!-- Left Sidebar: Input and Edit Form Area -->
-            <h:form id="surveyForm" styleClass="left-panel">
+            <h:form id="surveyForm" styleClass="left-panel" rendered="#{loginController.canEdit}">
                 <p:panel header="Create / Update Survey Report Entry">
                     <p:panelGrid columns="2" layout="flex" styleClass="ui-fluid"
                                  columnClasses="col-12 md:col-4, col-12 md:col-8">
@@ -60,14 +60,15 @@
             </h:form>
 
             <!-- Right Main Area: Dynamic Data Display Grid Component -->
-            <!-- Right Main Area: Dynamic Data Display Grid Component -->
             <h:form id="tableForm" styleClass="right-panel">
                 <p:defaultCommand target="reportsTable:filterBtn" />
 
-                <p:dataTable id="reportsTable" widgetVar="reportsTableWidget"
-                             value="#{surveyController.reports}" var="report" 
-                             paginator="true" rows="10" selectionMode="single" 
-                             selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
+<p:dataTable id="reportsTable" widgetVar="reportsTableWidget"
+             value="#{surveyController.reports}" var="report" 
+             paginator="true" rows="10" 
+             selectionMode="single" 
+             disabledSelection="#{!loginController.canEdit}"
+             selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
 
                     <f:facet name="header">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -105,7 +106,7 @@
                         </div>
                     </f:facet>
                     
-                    <p:ajax event="rowSelect" update=":surveyForm" />
+                    <p:ajax event="rowSelect" update=":surveyForm" disabled="#{!loginController.canEdit}" />
 
                     <p:column headerText="Item ID" sortBy="#{report.itemId}">
                         <h:outputText value="#{report.itemId}" />
@@ -130,23 +131,29 @@
                     </p:column>
                 </p:dataTable>
             </h:form>
-
         </div>
 
+        <!-- Bottom Footer Bar with User Session Controls -->
         <h:form id="logoutForm">
             <div class="page-footer">
                 <span>
                     Logged in as: <strong>#{loginController.currentUser.firstName} #{loginController.currentUser.lastName}</strong>
                     <span style="color: #6c757d; font-size: 0.9em;">(#{loginController.currentUser.role})</span>
                 </span>
-                <p:commandButton value="Logout" 
-                                 action="#{loginController.logout()}" 
-                                 icon="pi pi-sign-out" 
-                                 styleClass="ui-button-secondary ui-button-outlined" 
-                                 process="@this" />
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <p:button value="Manage Users" 
+                              outcome="users" 
+                              icon="pi pi-users" 
+                              styleClass="ui-button-outlined"
+                              rendered="#{loginController.admin}" />
+                    <p:commandButton value="Logout" 
+                                     action="#{loginController.logout()}" 
+                                     icon="pi pi-sign-out" 
+                                     styleClass="ui-button-secondary ui-button-outlined" 
+                                     process="@this" />
+                </div>
             </div>
         </h:form>
-
     </h:body>
 </html>
 

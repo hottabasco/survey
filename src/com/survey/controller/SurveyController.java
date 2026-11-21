@@ -6,6 +6,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.List;
@@ -17,8 +18,12 @@ import java.util.logging.Logger;
 public class SurveyController implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @jakarta.inject.Inject
+    @Inject
     private DatabaseService dbService;
+
+    @Inject
+    private LoginController loginController;
+
     private List<SurveyReport> reports;
     private SurveyReport selectedReport;
     private String trancheFilter;
@@ -47,22 +52,41 @@ public class SurveyController implements Serializable {
     }
 
     public void saveReport() {
+        if (!loginController.isCanEdit()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Access Denied", "You do not have permission to modify survey records."));
+            return;
+        }
         if (selectedReport.getItemId() == null) {
-            FacesContext.getCurrentInstance().addMessage(null, 
+            FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Item ID is required."));
             return;
         }
         dbService.save(selectedReport);
         loadReports();
         prepareNewReport();
-        FacesContext.getCurrentInstance().addMessage(null, 
+        FacesContext.getCurrentInstance().addMessage(null,
             new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Survey Report Processed cleanly."));
     }
 
-    public List<SurveyReport> getReports() { return reports; }
-    public SurveyReport getSelectedReport() { return selectedReport; }
-    public void setSelectedReport(SurveyReport selectedReport) { this.selectedReport = selectedReport; }
-    public String getTrancheFilter() { return trancheFilter; }
-    public void setTrancheFilter(String trancheFilter) { this.trancheFilter = trancheFilter; }
+    public List<SurveyReport> getReports() {
+        return reports;
+    }
+
+    public SurveyReport getSelectedReport() {
+        return selectedReport;
+    }
+
+    public void setSelectedReport(SurveyReport selectedReport) {
+        this.selectedReport = selectedReport;
+    }
+
+    public String getTrancheFilter() {
+        return trancheFilter;
+    }
+
+    public void setTrancheFilter(String trancheFilter) {
+        this.trancheFilter = trancheFilter;
+    }
 }
 

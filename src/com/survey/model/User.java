@@ -2,6 +2,7 @@ package com.survey.model;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -11,8 +12,11 @@ public class User implements Serializable {
     private String firstName;
     private String lastName;
     private String role;
+    private LocalDate startDate = LocalDate.now();
+    private LocalDate endDate;
+    private String plainPassword; // Transient form input; never loaded from DB
 
-    // Getters and Setters
+    // Existing Getters & Setters...
     public BigDecimal getUsrId() { return usrId; }
     public void setUsrId(BigDecimal usrId) { this.usrId = usrId; }
 
@@ -28,12 +32,14 @@ public class User implements Serializable {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    // utility to generate password field in Postgreql User table
-    // Substitute Password for for whatever is being used, uncomment the main method, then run as follows from the command line:
-    //   javac --release 17 -cp web/WEB-INF/lib/jbcrypt-0.4.jar -d /tmp src/com/survey/model/User.java
-    //   java -cp /tmp:web/WEB-INF/lib/jbcrypt-0.4.jar com.survey.model.User
-    // The string output to the console is the encrypted password value to use in the database table
-    //public static void main(String[] args) { System.out.println(org.mindrot.jbcrypt.BCrypt.hashpw("Password1", org.mindrot.jbcrypt.BCrypt.gensalt())); }
+    // New Getters & Setters
+    public LocalDate getStartDate() { return startDate; }
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
 
+    public LocalDate getEndDate() { return endDate; }
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+
+    public String getPlainPassword() { return plainPassword; }
+    public void setPlainPassword(String plainPassword) { this.plainPassword = plainPassword; }
 }
 
