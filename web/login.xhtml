@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Survey System - Login</title>
+    <meta charset="UTF-8"/>
+    <h:outputStylesheet library="css" name="style.css" />
+</h:head>
+<h:body>
+    <div class="login-container">
+        <p:card styleClass="login-card">
+            <f:facet name="title" xmlns:f="jakarta.faces.core">Sign In</f:facet>
+            
+            <h:form id="loginForm">
+                <p:messages id="messages" showDetail="true" closable="true" />
+                
+                <div class="ui-fluid">
+                    <div class="p-field" style="margin-bottom: 1rem;">
+                        <p:outputLabel for="username" value="Account Name" />
+                        <p:inputText id="username" value="#{loginController.username}" required="true" />
+                    </div>
+                    
+                    <div class="p-field" style="margin-bottom: 1.5rem;">
+                        <p:outputLabel for="password" value="Password" />
+                        <p:password id="password" value="#{loginController.password}" required="true" feedback="false" />
+                    </div>
+                    
+                    <p:commandButton value="Log In" action="#{loginController.login()}" update="messages" icon="pi pi-sign-in" />
+                </div>
+            </h:form>
+        </p:card>
+    </div>
+</h:body>
+</html>
+

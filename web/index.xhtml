@@ -132,6 +132,21 @@
             </h:form>
 
         </div>
+
+        <h:form id="logoutForm">
+            <div class="page-footer">
+                <span>
+                    Logged in as: <strong>#{loginController.currentUser.firstName} #{loginController.currentUser.lastName}</strong>
+                    <span style="color: #6c757d; font-size: 0.9em;">(#{loginController.currentUser.role})</span>
+                </span>
+                <p:commandButton value="Logout" 
+                                 action="#{loginController.logout()}" 
+                                 icon="pi pi-sign-out" 
+                                 styleClass="ui-button-secondary ui-button-outlined" 
+                                 process="@this" />
+            </div>
+        </h:form>
+
     </h:body>
 </html>
 

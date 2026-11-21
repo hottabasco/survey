@@ -26,3 +26,25 @@
     }
 }
 
+/* Login Page Layout */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+}
+
+.login-card {
+    width: 350px;
+}
+
+/* Bottom Footer Bar */
+.page-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid #dee2e6;
+}
+
