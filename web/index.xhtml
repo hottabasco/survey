@@ -9,10 +9,81 @@
         <title>Survey Management System</title>
         <meta charset="UTF-8"/>
         <h:outputStylesheet library="css" name="style.css" />
+        <script type="text/javascript">
+            function handleClipboardCopy(xhr, status, args) {
+                if (!args || !args.clipboardHtml) {
+                    return;
+                }
+        
+                if (navigator.clipboard &amp;&amp; window.ClipboardItem) {
+                    const htmlBlob = new Blob([args.clipboardHtml], { type: 'text/html' });
+                    const textBlob = new Blob([args.clipboardText], { type: 'text/plain' });
+                    const item = new ClipboardItem({
+                        'text/html': htmlBlob,
+                        'text/plain': textBlob
+                    });
+        
+                    navigator.clipboard.write([item]).then(function() {
+                        PF('growlWidget').renderMessage({
+                            summary: 'Copied to Clipboard',
+                            detail: args.rowCount + ' survey record(s) ready to paste into LibreOffice Writer.',
+                            severity: 'info'
+                        });
+                    }).catch(function() {
+                        fallbackHtmlCopy(args.clipboardHtml, args.rowCount);
+                    });
+                } else {
+                    fallbackHtmlCopy(args.clipboardHtml, args.rowCount);
+                }
+            }
+        
+            function fallbackHtmlCopy(htmlString, rowCount) {
+                try {
+                    const container = document.createElement('div');
+                    container.style.position = 'fixed';
+                    container.style.left = '-9999px';
+                    container.style.top = '0';
+                    container.setAttribute('contenteditable', 'true');
+                    container.innerHTML = htmlString;
+                    document.body.appendChild(container);
+        
+                    const range = document.createRange();
+                    range.selectNodeContents(container);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+        
+                    const ok = document.execCommand('copy');
+                    selection.removeAllRanges();
+                    document.body.removeChild(container);
+        
+                    if (ok) {
+                        PF('growlWidget').renderMessage({
+                            summary: 'Copied to Clipboard',
+                            detail: rowCount + ' survey record(s) ready to paste into LibreOffice Writer.',
+                            severity: 'info'
+                        });
+                    } else {
+                        PF('growlWidget').renderMessage({
+                            summary: 'Copy Failed',
+                            detail: 'Browser blocked clipboard copy.',
+                            severity: 'error'
+                        });
+                    }
+                } catch (e) {
+                    PF('growlWidget').renderMessage({
+                        summary: 'Copy Error',
+                        detail: e.message,
+                        severity: 'error'
+                    });
+                }
+        
+            }
+        </script>
     </h:head>
 
     <h:body>
-        <p:growl id="growlMessages" showDetail="true" life="4000" />
+        <p:growl id="growlMessages" widgetVar="growlWidget" showDetail="true" life="4000" />
 
         <h2>Survey Records Control Panel</h2>
 
@@ -63,13 +134,13 @@
             <h:form id="tableForm" styleClass="right-panel">
                 <p:defaultCommand target="reportsTable:filterBtn" />
 
-<p:dataTable id="reportsTable" widgetVar="reportsTableWidget"
-             value="#{surveyController.reports}" var="report" 
-             paginator="true" rows="10" 
-             selectionMode="single" 
-             disabledSelection="#{!loginController.canEdit}"
-             selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
-
+                <p:dataTable id="reportsTable" widgetVar="reportsTableWidget"
+                     value="#{surveyController.reports}" var="report" 
+                     paginator="true" rows="10" 
+                     selectionMode="single" 
+                     disabledSelection="#{!loginController.canEdit}"
+                     selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
+        
                     <f:facet name="header">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <span style="font-weight: bold; font-size: 1.1em;">
@@ -141,11 +212,20 @@
                     <span style="color: #6c757d; font-size: 0.9em;">(#{loginController.currentUser.role})</span>
                 </span>
                 <div style="display: flex; align-items: center; gap: 10px;">
+                    <p:commandButton value="Copy Table" 
+                                     action="#{surveyController.copyTableToClipboard()}" 
+                                     update=":growlMessages"
+                                     oncomplete="handleClipboardCopy(xhr, status, args);"
+                                     icon="pi pi-copy" 
+                                     styleClass="ui-button-outlined" 
+                                     process="@this" />
+        
                     <p:button value="Manage Users" 
                               outcome="users" 
                               icon="pi pi-users" 
                               styleClass="ui-button-outlined"
                               rendered="#{loginController.admin}" />
+
                     <p:commandButton value="Logout" 
                                      action="#{loginController.logout()}" 
                                      icon="pi pi-sign-out" 
