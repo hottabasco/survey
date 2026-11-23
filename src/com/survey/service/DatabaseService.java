@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import com.survey.model.User;
 import org.mindrot.jbcrypt.BCrypt; // From jbcrypt-0.4.j
 import java.time.LocalDate;
+import com.survey.model.DataSet;
 
 @ApplicationScoped
 public class DatabaseService implements Serializable {
@@ -91,33 +92,124 @@ public class DatabaseService implements Serializable {
 		return list;
 	}
 
-	public void save(SurveyReport r) {
-		String sql = "INSERT INTO public.survey_report (item_id, \"Type\", \"Element Type\", \"Location\", \"Description\", \"Maintenance Required\", \"Priority\", \"Tranche\", \"Notes\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " + "ON CONFLICT (item_id) DO UPDATE SET \"Type\" = ?, \"Element Type\" = ?, \"Location\" = ?, \"Description\" = ?, \"Maintenance Required\" = ?, \"Priority\" = ?, \"Tranche\" = ?, \"Notes\" = ?";
-		try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setBigDecimal(1, r.getItemId());
-			ps.setString(2, r.getType());
-			ps.setString(3, r.getElementType());
-			ps.setString(4, r.getLocation());
-			ps.setString(5, r.getDescription());
-			ps.setString(6, r.getMaintenanceRequired());
-			if(r.getPriority() != null) ps.setBoolean(7, r.getPriority());
-			else ps.setNull(7, Types.BOOLEAN);
-			ps.setString(8, r.getTranche());
-			ps.setString(9, r.getNotes());
-			ps.setString(10, r.getType());
-			ps.setString(11, r.getElementType());
-			ps.setString(12, r.getLocation());
-			ps.setString(13, r.getDescription());
-			ps.setString(14, r.getMaintenanceRequired());
-			if(r.getPriority() != null) ps.setBoolean(15, r.getPriority());
-			else ps.setNull(15, Types.BOOLEAN);
-			ps.setString(16, r.getTranche());
-			ps.setString(17, r.getNotes());
-			ps.executeUpdate();
+	public List<DataSet> findActiveDataSets() {
+		List<DataSet> list = new ArrayList<>();
+		String sql = "SELECT data_set_id, data_set_name, data_set_description, start_date, end_date " +
+					 "FROM public.data_set " +
+					 "WHERE start_date <= CURRENT_DATE " +
+					 "AND (end_date IS NULL OR end_date >= CURRENT_DATE) " +
+					 "ORDER BY data_set_id DESC";
+		try (Connection conn = getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql);
+			 ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				DataSet ds = new DataSet();
+				ds.setDataSetId(rs.getInt("data_set_id"));
+				ds.setDataSetName(rs.getString("data_set_name"));
+				ds.setDataSetDescription(rs.getString("data_set_description"));
+				Date sd = rs.getDate("start_date");
+				ds.setStartDate(sd != null ? sd.toLocalDate() : null);
+				Date ed = rs.getDate("end_date");
+				ds.setEndDate(ed != null ? ed.toLocalDate() : null);
+				list.add(ds);
+			}
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "JDBC Error", e);
+			logger.log(Level.SEVERE, "JDBC Error fetching active data sets", e);
 		}
+		return list;
 	}
+
+	public List<SurveyReport> findFiltered(Integer dataSetId, String tranche) {
+		List<SurveyReport> list = new ArrayList<>();
+		boolean hasDataSet = (dataSetId != null);
+		boolean hasTranche = (tranche != null && !tranche.trim().isEmpty());
+
+		StringBuilder sql = new StringBuilder(
+			"SELECT item_id, \"Type\", \"Element Type\", \"Location\", \"Description\", " +
+			"\"Maintenance Required\", \"Priority\", \"Tranche\", \"Notes\", data_set_id " +
+			"FROM public.survey_report WHERE 1=1 "
+		);
+
+		if (hasDataSet) {
+			sql.append("AND data_set_id = ? ");
+		}
+		if (hasTranche) {
+			sql.append("AND \"Tranche\" = ? ");
+		}
+		sql.append("ORDER BY data_set_id DESC, item_id ASC");
+
+		try (Connection conn = getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+			int paramIdx = 1;
+			if (hasDataSet) {
+				ps.setInt(paramIdx++, dataSetId);
+			}
+			if (hasTranche) {
+				ps.setString(paramIdx++, tranche.trim());
+			}
+
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					SurveyReport r = new SurveyReport();
+					r.setItemId(rs.getBigDecimal("item_id"));
+					r.setType(rs.getString(2));
+					r.setElementType(rs.getString(3));
+					r.setLocation(rs.getString(4));
+					r.setDescription(rs.getString(5));
+					r.setMaintenanceRequired(rs.getString(6));
+					r.setPriority(rs.getObject(7) != null ? rs.getBoolean(7) : null);
+					r.setTranche(rs.getString(8));
+					r.setNotes(rs.getString(9));
+					r.setDataSetId(rs.getInt(10));
+					list.add(r);
+				}
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "JDBC Error fetching filtered survey reports", e);
+		}
+		return list;
+	}
+
+        public void save(SurveyReport r) {
+            String sql = "INSERT INTO public.survey_report " +
+                         "(data_set_id, item_id, \"Type\", \"Element Type\", \"Location\", \"Description\", \"Maintenance Required\", \"Priority\", \"Tranche\", \"Notes\") " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                         "ON CONFLICT (data_set_id, item_id) DO UPDATE SET " +
+                         "\"Type\" = ?, \"Element Type\" = ?, \"Location\" = ?, \"Description\" = ?, \"Maintenance Required\" = ?, \"Priority\" = ?, \"Tranche\" = ?, \"Notes\" = ?";
+        
+            int dsId = (r.getDataSetId() != null) ? r.getDataSetId() : 1;
+        
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+                // INSERT values
+                ps.setInt(1, dsId);
+                ps.setBigDecimal(2, r.getItemId());
+                ps.setString(3, r.getType());
+                ps.setString(4, r.getElementType());
+                ps.setString(5, r.getLocation());
+                ps.setString(6, r.getDescription());
+                ps.setString(7, r.getMaintenanceRequired());
+                if (r.getPriority() != null) ps.setBoolean(8, r.getPriority()); else ps.setNull(8, Types.BOOLEAN);
+                ps.setString(9, r.getTranche());
+                ps.setString(10, r.getNotes());
+        
+                // ON CONFLICT DO UPDATE values
+                ps.setString(11, r.getType());
+                ps.setString(12, r.getElementType());
+                ps.setString(13, r.getLocation());
+                ps.setString(14, r.getDescription());
+                ps.setString(15, r.getMaintenanceRequired());
+                if (r.getPriority() != null) ps.setBoolean(16, r.getPriority()); else ps.setNull(16, Types.BOOLEAN);
+                ps.setString(17, r.getTranche());
+                ps.setString(18, r.getNotes());
+        
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "JDBC Error", e);
+            }
+        }
 
 	public User authenticate(String accountName, String plainPassword) {
 		if(accountName == null || plainPassword == null) {
@@ -222,6 +314,77 @@ public class DatabaseService implements Serializable {
 				int updated = ps.executeUpdate();
 				if(updated == 0) {
 					throw new SQLException("Password is required when creating a new user.");
+				}
+			}
+		}
+	}
+
+	public int importSurveyDataSet(String dataSetName, String dataSetDescription, List < SurveyReport > records) throws SQLException {
+		String insertDataSetSql = "INSERT INTO public.data_set (data_set_name, data_set_description) VALUES (?, ?)";
+                String insertReportSql = "INSERT INTO public.survey_report " +
+                        "(item_id, \"Type\", \"Element Type\", \"Location\", \"Description\", \"Maintenance Required\", \"Priority\", \"Tranche\", \"Notes\", data_set_id) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		Connection conn = null;
+		try {
+			conn = getConnection();
+			conn.setAutoCommit(false);
+
+			int generatedDataSetId;
+			try (PreparedStatement psDs = conn.prepareStatement(insertDataSetSql, Statement.RETURN_GENERATED_KEYS)) {
+				psDs.setString(1, dataSetName.trim());
+				psDs.setString(2, dataSetDescription.trim());
+				psDs.executeUpdate();
+
+				try (ResultSet keys = psDs.getGeneratedKeys()) {
+					if(keys.next()) {
+						generatedDataSetId = keys.getInt(1);
+					} else {
+						throw new SQLException("Failed to retrieve generated data_set_id.");
+					}
+				}
+			}
+
+			try (PreparedStatement psRep = conn.prepareStatement(insertReportSql)) {
+				for(SurveyReport r: records) {
+					psRep.setBigDecimal(1, r.getItemId());
+					psRep.setString(2, r.getType());
+					psRep.setString(3, r.getElementType());
+					psRep.setString(4, r.getLocation());
+					psRep.setString(5, r.getDescription());
+					psRep.setString(6, r.getMaintenanceRequired());
+					if(r.getPriority() != null) {
+						psRep.setBoolean(7, r.getPriority());
+					} else {
+						psRep.setNull(7, Types.BOOLEAN);
+					}
+					psRep.setString(8, r.getTranche());
+					psRep.setString(9, r.getNotes());
+					psRep.setInt(10, generatedDataSetId);
+					psRep.addBatch();
+				}
+				psRep.executeBatch();
+			}
+
+			conn.commit();
+			return generatedDataSetId;
+
+		} catch (SQLException e) {
+			if(conn != null) {
+				try {
+					conn.rollback();
+				} catch (SQLException rollbackEx) {
+					logger.log(Level.SEVERE, "Rollback failed", rollbackEx);
+				}
+			}
+			throw e;
+		} finally {
+			if(conn != null) {
+				try {
+					conn.setAutoCommit(true);
+					conn.close();
+				} catch (SQLException closeEx) {
+					logger.log(Level.WARNING, "Failed to close connection", closeEx);
 				}
 			}
 		}

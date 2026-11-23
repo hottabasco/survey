@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+<h:head>
+    <title>Import Survey CSV Data Set</title>
+    <meta charset="UTF-8"/>
+    <h:outputStylesheet library="css" name="style.css" />
+</h:head>
+
+<h:body>
+    <p:growl id="growlMessages" showDetail="true" life="6000" />
+
+    <h2>Import Survey Data Set (CSV)</h2>
+
+    <div style="max-width: 600px;">
+        <h:form id="importForm" enctype="multipart/form-data">
+            <p:panel header="Load CSV File into New Data Set">
+                <p:panelGrid columns="2" layout="flex" styleClass="ui-fluid"
+                             columnClasses="col-12 md:col-4, col-12 md:col-8">
+
+                    <p:outputLabel for="csvFile" value="CSV File:"/>
+                    <p:fileUpload id="csvFile" value="#{importController.csvFile}" 
+                                  mode="simple" skinSimple="true" accept=".csv" required="true" />
+
+                    <p:outputLabel for="dsName" value="Data Set Name:"/>
+                    <p:inputText id="dsName" value="#{importController.dataSetName}" 
+                                 maxlength="20" required="true" placeholder="Max 20 characters" />
+
+                    <p:outputLabel for="dsDesc" value="Description:"/>
+                    <p:inputTextarea id="dsDesc" value="#{importController.dataSetDescription}" 
+                                     rows="3" required="true" placeholder="Describe this survey data set..." />
+                </p:panelGrid>
+
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <p:commandButton value="Load Data Set" 
+                                     action="#{importController.uploadAndImport()}" 
+                                     ajax="false" 
+                                     icon="pi pi-upload" />
+                    <p:button value="Back to Survey" outcome="index" 
+                              styleClass="ui-button-secondary" icon="pi pi-arrow-left" />
+                </div>
+            </p:panel>
+        </h:form>
+    </div>
+</h:body>
+</html>
+

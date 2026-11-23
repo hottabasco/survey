@@ -93,6 +93,15 @@
                 <p:panel header="Create / Update Survey Report Entry">
                     <p:panelGrid columns="2" layout="flex" styleClass="ui-fluid"
                                  columnClasses="col-12 md:col-4, col-12 md:col-8">
+                        <p:outputLabel for="dataSetId" value="Data Set:"/>
+                        <p:selectOneMenu id="dataSetId" value="#{surveyController.selectedReport.dataSetId}"
+                                         converter="jakarta.faces.Integer" required="true">
+                            <f:selectItem itemLabel="-- Select Data Set --" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{surveyController.dataSets}" var="ds"
+                                           itemLabel="#{ds.dataSetName} (ID: #{ds.dataSetId})"
+                                           itemValue="#{ds.dataSetId}" />
+                        </p:selectOneMenu>
+
                         <p:outputLabel for="itemId" value="Item ID:"/>
                         <p:inputNumber id="itemId" value="#{surveyController.selectedReport.itemId}" decimalPlaces="0" required="true"/>
 
@@ -139,20 +148,34 @@
                      paginator="true" rows="10" 
                      selectionMode="single" 
                      disabledSelection="#{!loginController.canEdit}"
-                     selection="#{surveyController.selectedReport}" rowKey="#{report.itemId}">
+                     selection="#{surveyController.selectedReport}" 
+                     rowKey="#{report.dataSetId}-#{report.itemId}">
         
-                    <f:facet name="header">
+                                       <f:facet name="header">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <span style="font-weight: bold; font-size: 1.1em;">
                                 Survey Reports
+                                <h:panelGroup rendered="#{not empty surveyController.selectedDataSetId}">
+                                    <span style="font-weight: normal; font-size: 0.85em; margin-left: 8px; color: #0275d8;">
+                                        (Data Set ID: #{surveyController.selectedDataSetId})
+                                    </span>
+                                </h:panelGroup>
                                 <h:panelGroup rendered="#{not empty surveyController.trancheFilter}">
                                     <span style="font-weight: normal; font-size: 0.85em; margin-left: 8px; color: #0275d8;">
-                                        (Filtered by Tranche: "#{surveyController.trancheFilter}")
+                                        (Tranche: "#{surveyController.trancheFilter}")
                                     </span>
                                 </h:panelGroup>
                             </span>
 
                             <div class="ui-inputgroup">
+                                <p:selectOneMenu id="dataSetFilter" value="#{surveyController.selectedDataSetId}"
+                                                 converter="jakarta.faces.Integer" style="width: 200px;">
+                                    <f:selectItem itemLabel="All Data Sets" itemValue="#{null}" />
+                                    <f:selectItems value="#{surveyController.dataSets}" var="ds"
+                                                   itemLabel="#{ds.dataSetName} (ID: #{ds.dataSetId})"
+                                                   itemValue="#{ds.dataSetId}" />
+                                </p:selectOneMenu>
+
                                 <p:inputText id="trancheFilterInput" 
                                              value="#{surveyController.trancheFilter}" 
                                              placeholder="Filter by Tranche..." 
@@ -172,11 +195,11 @@
                                                  icon="pi pi-times" 
                                                  styleClass="ui-button-secondary" 
                                                  process="@this"
-                                                 disabled="#{empty surveyController.trancheFilter}" />
+                                                 disabled="#{empty surveyController.trancheFilter and empty surveyController.selectedDataSetId}" />
                             </div>
                         </div>
                     </f:facet>
-                    
+
                     <p:ajax event="rowSelect" update=":surveyForm" disabled="#{!loginController.canEdit}" />
 
                     <p:column headerText="Item ID" sortBy="#{report.itemId}">
@@ -212,6 +235,13 @@
                     <span style="color: #6c757d; font-size: 0.9em;">(#{loginController.currentUser.role})</span>
                 </span>
                 <div style="display: flex; align-items: center; gap: 10px;">
+
+                   <p:button value="Import CSV" 
+                       outcome="import" 
+                       icon="pi pi-upload" 
+                       styleClass="ui-button-outlined"
+                       rendered="#{loginController.canEdit}" />
+
                     <p:commandButton value="Copy Table" 
                                      action="#{surveyController.copyTableToClipboard()}" 
                                      update=":growlMessages"

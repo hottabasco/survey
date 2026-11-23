@@ -42,6 +42,7 @@
     </target>
 
     <target name="deploy" depends="war">
+        <delete dir="${tomee.home}/webapps/survey" failonerror="false"/>
         <copy file="${dist.dir}/${war.name}" todir="${tomee.home}/webapps"/>
     </target>
 </project>
