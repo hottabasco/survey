@@ -5,4 +5,5 @@ dist/
 *.class
 .DS_Store
 src/survey.properties
-
+*.bak
+jakarta.*
