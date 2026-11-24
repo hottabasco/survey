@@ -125,18 +125,21 @@ public class DatabaseService implements Serializable {
 		boolean hasTranche = (tranche != null && !tranche.trim().isEmpty());
 
 		StringBuilder sql = new StringBuilder(
-			"SELECT item_id, \"Type\", \"Element Type\", \"Location\", \"Description\", " +
-			"\"Maintenance Required\", \"Priority\", \"Tranche\", \"Notes\", data_set_id " +
-			"FROM public.survey_report WHERE 1=1 "
+			"SELECT sr.item_id, sr.\"Type\", sr.\"Element Type\", sr.\"Location\", sr.\"Description\", " +
+			"sr.\"Maintenance Required\", sr.\"Priority\", sr.\"Tranche\", sr.\"Notes\", sr.data_set_id, " +
+			"ds.data_set_name, ds.data_set_description " +
+			"FROM public.survey_report sr " +
+			"LEFT JOIN public.data_set ds ON sr.data_set_id = ds.data_set_id " +
+			"WHERE 1=1 "
 		);
 
 		if (hasDataSet) {
-			sql.append("AND data_set_id = ? ");
+			sql.append("AND sr.data_set_id = ? ");
 		}
 		if (hasTranche) {
-			sql.append("AND \"Tranche\" = ? ");
+			sql.append("AND sr.\"Tranche\" = ? ");
 		}
-		sql.append("ORDER BY data_set_id DESC, item_id ASC");
+		sql.append("ORDER BY sr.data_set_id DESC, sr.item_id ASC");
 
 		try (Connection conn = getConnection();
 			 PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -152,7 +155,7 @@ public class DatabaseService implements Serializable {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
 					SurveyReport r = new SurveyReport();
-					r.setItemId(rs.getBigDecimal("item_id"));
+					r.setItemId(rs.getBigDecimal(1));
 					r.setType(rs.getString(2));
 					r.setElementType(rs.getString(3));
 					r.setLocation(rs.getString(4));
@@ -162,6 +165,8 @@ public class DatabaseService implements Serializable {
 					r.setTranche(rs.getString(8));
 					r.setNotes(rs.getString(9));
 					r.setDataSetId(rs.getInt(10));
+					r.setDataSetName(rs.getString(11));
+					r.setDataSetDescription(rs.getString(12));
 					list.add(r);
 				}
 			}
@@ -169,6 +174,60 @@ public class DatabaseService implements Serializable {
 			logger.log(Level.SEVERE, "JDBC Error fetching filtered survey reports", e);
 		}
 		return list;
+	}
+
+	public List<DataSet> findAllDataSets() {
+		List<DataSet> list = new ArrayList<>();
+		String sql = "SELECT data_set_id, data_set_name, data_set_description, start_date, end_date " +
+					 "FROM public.data_set ORDER BY data_set_id DESC";
+		try (Connection conn = getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql);
+			 ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				DataSet ds = new DataSet();
+				ds.setDataSetId(rs.getInt("data_set_id"));
+				ds.setDataSetName(rs.getString("data_set_name"));
+				ds.setDataSetDescription(rs.getString("data_set_description"));
+				Date sd = rs.getDate("start_date");
+				ds.setStartDate(sd != null ? sd.toLocalDate() : null);
+				Date ed = rs.getDate("end_date");
+				ds.setEndDate(ed != null ? ed.toLocalDate() : null);
+				list.add(ds);
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "Error fetching all data sets", e);
+		}
+		return list;
+	}
+
+	public void saveDataSet(DataSet ds) throws SQLException {
+		if (ds.getDataSetId() == null) {
+			String sql = "INSERT INTO public.data_set (data_set_name, data_set_description, start_date, end_date) " +
+						 "VALUES (?, ?, ?, ?)";
+			try (Connection conn = getConnection();
+				 PreparedStatement ps = conn.prepareStatement(sql)) {
+				ps.setString(1, ds.getDataSetName().trim());
+				ps.setString(2, ds.getDataSetDescription().trim());
+				ps.setDate(3, ds.getStartDate() != null ? Date.valueOf(ds.getStartDate()) : Date.valueOf(LocalDate.now()));
+				if (ds.getEndDate() != null) ps.setDate(4, Date.valueOf(ds.getEndDate()));
+				else ps.setNull(4, Types.DATE);
+				ps.executeUpdate();
+			}
+		} else {
+			String sql = "UPDATE public.data_set " +
+						 "SET data_set_name = ?, data_set_description = ?, start_date = ?, end_date = ? " +
+						 "WHERE data_set_id = ?";
+			try (Connection conn = getConnection();
+				 PreparedStatement ps = conn.prepareStatement(sql)) {
+				ps.setString(1, ds.getDataSetName().trim());
+				ps.setString(2, ds.getDataSetDescription().trim());
+				ps.setDate(3, ds.getStartDate() != null ? Date.valueOf(ds.getStartDate()) : Date.valueOf(LocalDate.now()));
+				if (ds.getEndDate() != null) ps.setDate(4, Date.valueOf(ds.getEndDate()));
+				else ps.setNull(4, Types.DATE);
+				ps.setInt(5, ds.getDataSetId());
+				ps.executeUpdate();
+			}
+		}
 	}
 
         public void save(SurveyReport r) {

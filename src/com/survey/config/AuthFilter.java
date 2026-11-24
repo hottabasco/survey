@@ -26,6 +26,13 @@ public class AuthFilter implements Filter {
 			uri.startsWith(contextPath + "/resources/");
 		boolean isLoggedIn = (loginController != null && loginController.isLoggedIn());
 
+		if(isLoggedIn && (uri.startsWith(contextPath + "/import.xhtml") || uri.startsWith(contextPath + "/datasets.xhtml"))) {
+			if(!loginController.isCanEdit()) {
+				response.sendRedirect(contextPath + "/index.xhtml");
+				return;
+			}
+		}
+
 		if(isLoggedIn && uri.startsWith(contextPath + "/import.xhtml")) {
 			if(!loginController.isCanEdit()) {
 				response.sendRedirect(contextPath + "/index.xhtml");

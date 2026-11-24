@@ -123,52 +123,90 @@ public class SurveyController implements Serializable {
             return;
         }
 
-        StringBuilder html = new StringBuilder();
-        StringBuilder tsv = new StringBuilder();
-
-        html.append("<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\" style=\"border-collapse: collapse; font-family: sans-serif; font-size: 10pt;\">")
-            .append("<thead><tr style=\"background-color: #f0f0f0; font-weight: bold;\">")
-            .append("<th>Item ID</th><th>Type</th><th>Element Type</th><th>Location</th>")
-            .append("<th>Description</th><th>Maintenance Required</th><th>Priority</th><th>Tranche</th><th>Notes</th>")
-            .append("</tr></thead><tbody>");
-
-        tsv.append("Item ID\tType\tElement Type\tLocation\tDescription\tMaintenance Required\tPriority\tTranche\tNotes\n");
-
+        // Group records by Data Set ID while preserving display order
+        java.util.Map<Integer, List<SurveyReport>> grouped = new java.util.LinkedHashMap<>();
         for (SurveyReport r : reports) {
-            String itemId = r.getItemId() != null ? r.getItemId().toPlainString() : "";
-            String type = safeStr(r.getType());
-            String elemType = safeStr(r.getElementType());
-            String location = safeStr(r.getLocation());
-            String desc = safeStr(r.getDescription());
-            String maint = safeStr(r.getMaintenanceRequired());
-            String priority = Boolean.TRUE.equals(r.getPriority()) ? "YES" : "NO";
-            String tranche = safeStr(r.getTranche());
-            String notes = safeStr(r.getNotes());
-
-            html.append("<tr>")
-                .append("<td>").append(escapeHtml(itemId)).append("</td>")
-                .append("<td>").append(escapeHtml(type)).append("</td>")
-                .append("<td>").append(escapeHtml(elemType)).append("</td>")
-                .append("<td>").append(escapeHtml(location)).append("</td>")
-                .append("<td>").append(escapeHtml(desc)).append("</td>")
-                .append("<td>").append(escapeHtml(maint)).append("</td>")
-                .append("<td>").append(priority).append("</td>")
-                .append("<td>").append(escapeHtml(tranche)).append("</td>")
-                .append("<td>").append(escapeHtml(notes)).append("</td>")
-                .append("</tr>");
-
-            tsv.append(cleanTsv(itemId)).append('\t')
-                .append(cleanTsv(type)).append('\t')
-                .append(cleanTsv(elemType)).append('\t')
-                .append(cleanTsv(location)).append('\t')
-                .append(cleanTsv(desc)).append('\t')
-                .append(cleanTsv(maint)).append('\t')
-                .append(priority).append('\t')
-                .append(cleanTsv(tranche)).append('\t')
-                .append(cleanTsv(notes)).append('\n');
+            Integer dsKey = (r.getDataSetId() != null) ? r.getDataSetId() : -1;
+            grouped.computeIfAbsent(dsKey, k -> new java.util.ArrayList<>()).add(r);
         }
 
-        html.append("</tbody></table>");
+        StringBuilder html = new StringBuilder();
+        StringBuilder tsv = new StringBuilder();
+        boolean firstGroup = true;
+
+        for (List<SurveyReport> groupReports : grouped.values()) {
+            SurveyReport first = groupReports.get(0);
+            String dsName = (first.getDataSetName() != null && !first.getDataSetName().trim().isEmpty())
+                ? first.getDataSetName().trim()
+                : "Unspecified Data Set";
+            String dsDesc = (first.getDataSetDescription() != null && !first.getDataSetDescription().trim().isEmpty())
+                ? first.getDataSetDescription().trim()
+                : "";
+
+            if (!firstGroup) {
+                html.append("<br/>");
+                tsv.append('\n');
+            }
+            firstGroup = false;
+
+            // Heading and Description Subtitle
+            html.append("<h3 style=\"font-family: sans-serif; margin-bottom: 2px;\">")
+                .append(escapeHtml(dsName))
+                .append("</h3>");
+
+            tsv.append(cleanTsv(dsName)).append('\n');
+
+            if (!dsDesc.isEmpty()) {
+                html.append("<p style=\"font-family: sans-serif; font-size: 9.5pt; color: #555555; font-style: italic; margin-top: 0; margin-bottom: 8px;\">")
+                    .append(escapeHtml(dsDesc))
+                    .append("</p>");
+                tsv.append(cleanTsv(dsDesc)).append('\n');
+            }
+
+            html.append("<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\" style=\"border-collapse: collapse; font-family: sans-serif; font-size: 10pt;\">")
+                .append("<thead><tr style=\"background-color: #f0f0f0; font-weight: bold;\">")
+                .append("<th>Item ID</th><th>Type</th><th>Element Type</th><th>Location</th>")
+                .append("<th>Description</th><th>Maintenance Required</th><th>Priority</th><th>Tranche</th><th>Notes</th>")
+                .append("</tr></thead><tbody>");
+
+            tsv.append("Item ID\tType\tElement Type\tLocation\tDescription\tMaintenance Required\tPriority\tTranche\tNotes\n");
+
+            for (SurveyReport r : groupReports) {
+                String itemId = r.getItemId() != null ? r.getItemId().toPlainString() : "";
+                String type = safeStr(r.getType());
+                String elemType = safeStr(r.getElementType());
+                String location = safeStr(r.getLocation());
+                String desc = safeStr(r.getDescription());
+                String maint = safeStr(r.getMaintenanceRequired());
+                String priority = Boolean.TRUE.equals(r.getPriority()) ? "YES" : "NO";
+                String tranche = safeStr(r.getTranche());
+                String notes = safeStr(r.getNotes());
+
+                html.append("<tr>")
+                    .append("<td>").append(escapeHtml(itemId)).append("</td>")
+                    .append("<td>").append(escapeHtml(type)).append("</td>")
+                    .append("<td>").append(escapeHtml(elemType)).append("</td>")
+                    .append("<td>").append(escapeHtml(location)).append("</td>")
+                    .append("<td>").append(escapeHtml(desc)).append("</td>")
+                    .append("<td>").append(escapeHtml(maint)).append("</td>")
+                    .append("<td>").append(priority).append("</td>")
+                    .append("<td>").append(escapeHtml(tranche)).append("</td>")
+                    .append("<td>").append(escapeHtml(notes)).append("</td>")
+                    .append("</tr>");
+
+                tsv.append(cleanTsv(itemId)).append('\t')
+                    .append(cleanTsv(type)).append('\t')
+                    .append(cleanTsv(elemType)).append('\t')
+                    .append(cleanTsv(location)).append('\t')
+                    .append(cleanTsv(desc)).append('\t')
+                    .append(cleanTsv(maint)).append('\t')
+                    .append(priority).append('\t')
+                    .append(cleanTsv(tranche)).append('\t')
+                    .append(cleanTsv(notes)).append('\n');
+            }
+
+            html.append("</tbody></table>");
+        }
 
         PrimeFaces.current().ajax().addCallbackParam("clipboardHtml", html.toString());
         PrimeFaces.current().ajax().addCallbackParam("clipboardText", tsv.toString());

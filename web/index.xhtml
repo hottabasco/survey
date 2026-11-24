@@ -202,6 +202,9 @@
 
                     <p:ajax event="rowSelect" update=":surveyForm" disabled="#{!loginController.canEdit}" />
 
+                    <p:column headerText="Data Set" sortBy="#{report.dataSetName}">
+                        <h:outputText value="#{report.dataSetName}" />
+                    </p:column>
                     <p:column headerText="Item ID" sortBy="#{report.itemId}">
                         <h:outputText value="#{report.itemId}" />
                     </p:column>
@@ -255,6 +258,12 @@
                               icon="pi pi-users" 
                               styleClass="ui-button-outlined"
                               rendered="#{loginController.admin}" />
+
+                    <p:button value="Manage Data Sets" 
+                              outcome="datasets" 
+                              icon="pi pi-database" 
+                              styleClass="ui-button-outlined"
+                              rendered="#{loginController.canEdit}" />
 
                     <p:commandButton value="Logout" 
                                      action="#{loginController.logout()}" 

@@ -21,6 +21,8 @@ public class SurveyReport implements Serializable {
 	private String tranche;
 	private String notes;
 	private Integer dataSetId;
+        private String dataSetName;
+	private String dataSetDescription;
 
 	public SurveyReport() {
 		logger.log(Level.INFO, "entering SurveyReport");
@@ -106,8 +108,25 @@ public class SurveyReport implements Serializable {
 	public Integer getDataSetId() {
 		return dataSetId;
 	}
+
 	public void setDataSetId(Integer dataSetId) {
 		this.dataSetId = dataSetId;
+	}
+
+	public String getDataSetName() {
+		return dataSetName;
+	}
+
+	public void setDataSetName(String dataSetName) {
+		this.dataSetName = dataSetName;
+	}
+
+	public String getDataSetDescription() {
+		return dataSetDescription;
+	}
+
+	public void setDataSetDescription(String dataSetDescription) {
+		this.dataSetDescription = dataSetDescription;
 	}
 
 }
