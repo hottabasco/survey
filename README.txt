@@ -61,6 +61,7 @@ JSF application structure:
 ./src/com/survey
 ./src/com/survey/controller
 ./src/com/survey/controller/LoginController.java
+./src/com/survey/controller/DataSetController.java
 ./src/com/survey/controller/ImportController.java
 ./src/com/survey/controller/UserController.java
 ./src/com/survey/controller/SurveyController.java
@@ -68,6 +69,7 @@ JSF application structure:
 ./src/com/survey/model/SurveyReport.java
 ./src/com/survey/model/User.java
 ./src/com/survey/model/Utility.java
+./src/com/survey/model/DataSet.java
 ./src/com/survey/config
 ./src/com/survey/config/LoggingInitializer.java
 ./src/com/survey/config/AuthFilter.java
@@ -77,6 +79,7 @@ JSF application structure:
 ./src/META-INF
 ./src/META-INF/services
 ./web
+./web/datasets.xhtml
 ./web/resources
 ./web/resources/css
 ./web/resources/css/style.css
@@ -93,6 +96,5 @@ JSF application structure:
 ./web/index.xhtml
 ./web/import.xhtml
 ./web/login.xhtml
-./jakarta.faces.context.FacesContext
-
+./README.txt
 
