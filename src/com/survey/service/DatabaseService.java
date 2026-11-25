@@ -120,9 +120,14 @@ public class DatabaseService implements Serializable {
 	}
 
 	public List<SurveyReport> findFiltered(Integer dataSetId, String tranche) {
+		return findFiltered(dataSetId, tranche, null, false);
+	}
+
+	public List<SurveyReport> findFiltered(Integer dataSetId, String tranche, String searchQuery, boolean highPriorityOnly) {
 		List<SurveyReport> list = new ArrayList<>();
 		boolean hasDataSet = (dataSetId != null);
 		boolean hasTranche = (tranche != null && !tranche.trim().isEmpty());
+		boolean hasSearch = (searchQuery != null && !searchQuery.trim().isEmpty());
 
 		StringBuilder sql = new StringBuilder(
 			"SELECT sr.item_id, sr.\"Type\", sr.\"Element Type\", sr.\"Location\", sr.\"Description\", " +
@@ -137,8 +142,24 @@ public class DatabaseService implements Serializable {
 			sql.append("AND sr.data_set_id = ? ");
 		}
 		if (hasTranche) {
-			sql.append("AND sr.\"Tranche\" = ? ");
+			sql.append("AND sr.\"Tranche\" ILIKE ? ");
 		}
+		if (highPriorityOnly) {
+			sql.append("AND sr.\"Priority\" = TRUE ");
+		}
+		if (hasSearch) {
+			sql.append("AND (")
+			   .append("CAST(sr.item_id AS TEXT) ILIKE ? OR ")
+			   .append("COALESCE(sr.\"Type\", '') ILIKE ? OR ")
+			   .append("COALESCE(sr.\"Element Type\", '') ILIKE ? OR ")
+			   .append("COALESCE(sr.\"Location\", '') ILIKE ? OR ")
+			   .append("COALESCE(sr.\"Description\", '') ILIKE ? OR ")
+			   .append("COALESCE(sr.\"Maintenance Required\", '') ILIKE ? OR ")
+			   .append("COALESCE(sr.\"Tranche\", '') ILIKE ? OR ")
+			   .append("COALESCE(sr.\"Notes\", '') ILIKE ?")
+			   .append(") ");
+		}
+
 		sql.append("ORDER BY sr.data_set_id DESC, sr.item_id ASC");
 
 		try (Connection conn = getConnection();
@@ -149,7 +170,13 @@ public class DatabaseService implements Serializable {
 				ps.setInt(paramIdx++, dataSetId);
 			}
 			if (hasTranche) {
-				ps.setString(paramIdx++, tranche.trim());
+				ps.setString(paramIdx++, "%" + tranche.trim() + "%");
+			}
+			if (hasSearch) {
+				String pattern = "%" + searchQuery.trim() + "%";
+				for (int i = 0; i < 8; i++) {
+					ps.setString(paramIdx++, pattern);
+				}
 			}
 
 			try (ResultSet rs = ps.executeQuery()) {

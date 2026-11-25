@@ -145,31 +145,29 @@
 
                 <p:dataTable id="reportsTable" widgetVar="reportsTableWidget"
                      value="#{surveyController.reports}" var="report" 
-                     paginator="true" rows="10" 
+                     paginator="true" rows="10"
+                     rowsPerPageTemplate="10,25,50,100"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
                      selectionMode="single" 
                      disabledSelection="#{!loginController.canEdit}"
                      selection="#{surveyController.selectedReport}" 
                      rowKey="#{report.dataSetId}-#{report.itemId}">
         
-                                       <f:facet name="header">
+                    <f:facet name="header">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <span style="font-weight: bold; font-size: 1.1em;">
-                                Survey Reports
-                                <h:panelGroup rendered="#{not empty surveyController.selectedDataSetId}">
+                                Survey Reports (#{surveyController.reports.size()})
+                                <h:panelGroup rendered="#{surveyController.anyFilterActive}">
                                     <span style="font-weight: normal; font-size: 0.85em; margin-left: 8px; color: #0275d8;">
-                                        (Data Set ID: #{surveyController.selectedDataSetId})
-                                    </span>
-                                </h:panelGroup>
-                                <h:panelGroup rendered="#{not empty surveyController.trancheFilter}">
-                                    <span style="font-weight: normal; font-size: 0.85em; margin-left: 8px; color: #0275d8;">
-                                        (Tranche: "#{surveyController.trancheFilter}")
+                                        [Filtered]
                                     </span>
                                 </h:panelGroup>
                             </span>
 
-                            <div class="ui-inputgroup">
+                            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                                 <p:selectOneMenu id="dataSetFilter" value="#{surveyController.selectedDataSetId}"
-                                                 converter="jakarta.faces.Integer" style="width: 200px;">
+                                                 converter="jakarta.faces.Integer" style="width: 190px;">
                                     <f:selectItem itemLabel="All Data Sets" itemValue="#{null}" />
                                     <f:selectItems value="#{surveyController.dataSets}" var="ds"
                                                    itemLabel="#{ds.dataSetName} (ID: #{ds.dataSetId})"
@@ -178,11 +176,20 @@
 
                                 <p:inputText id="trancheFilterInput" 
                                              value="#{surveyController.trancheFilter}" 
-                                             placeholder="Filter by Tranche..." 
-                                             style="width: 200px;" />
+                                             placeholder="Tranche..." 
+                                             style="width: 130px;" />
+
+                                <p:inputText id="searchQueryInput" 
+                                             value="#{surveyController.searchQuery}" 
+                                             placeholder="Keyword search..." 
+                                             style="width: 180px;" />
+
+                                <p:selectBooleanCheckbox id="highPriorityFilter"
+                                                         value="#{surveyController.highPriorityOnly}"
+                                                         itemLabel="High Priority" />
                                 
                                 <p:commandButton id="filterBtn" 
-                                                 value="Apply Filter" 
+                                                 value="Apply" 
                                                  action="#{surveyController.loadReports()}" 
                                                  update="reportsTable" 
                                                  oncomplete="PF('reportsTableWidget').getPaginator().setPage(0);"
@@ -195,38 +202,39 @@
                                                  icon="pi pi-times" 
                                                  styleClass="ui-button-secondary" 
                                                  process="@this"
-                                                 disabled="#{empty surveyController.trancheFilter and empty surveyController.selectedDataSetId}" />
+                                                 disabled="#{!surveyController.anyFilterActive}" />
                             </div>
                         </div>
                     </f:facet>
-
+                    
                     <p:ajax event="rowSelect" update=":surveyForm" disabled="#{!loginController.canEdit}" />
 
                     <p:column headerText="Data Set" sortBy="#{report.dataSetName}">
                         <h:outputText value="#{report.dataSetName}" />
                     </p:column>
-                    <p:column headerText="Item ID" sortBy="#{report.itemId}">
+                    <p:column headerText="Item ID" sortBy="#{report.itemId}" width="85">
                         <h:outputText value="#{report.itemId}" />
                     </p:column>
-                    <p:column headerText="Type">
+                    <p:column headerText="Type" sortBy="#{report.type}">
                         <h:outputText value="#{report.type}" />
                     </p:column>
-                    <p:column headerText="Element Type">
+                    <p:column headerText="Element Type" sortBy="#{report.elementType}">
                         <h:outputText value="#{report.elementType}" />
                     </p:column>
-                    <p:column headerText="Location">
+                    <p:column headerText="Location" sortBy="#{report.location}">
                         <h:outputText value="#{report.location}" />
                     </p:column>
-                    <p:column headerText="Maintenance">
+                    <p:column headerText="Maintenance" sortBy="#{report.maintenanceRequired}">
                         <h:outputText value="#{report.maintenanceRequired}" />
                     </p:column>
-                    <p:column headerText="Priority" width="90">
+                    <p:column headerText="Priority" sortBy="#{report.priority}" width="90">
                         <h:outputText value="#{report.priority ? 'YES' : 'NO'}" style="font-weight: bold; color: #{report.priority ? 'red' : 'green'};" />
                     </p:column>
-                    <p:column headerText="Tranche">
+                    <p:column headerText="Tranche" sortBy="#{report.tranche}" width="100">
                         <h:outputText value="#{report.tranche}" />
                     </p:column>
                 </p:dataTable>
+
             </h:form>
         </div>
 

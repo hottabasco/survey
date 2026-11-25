@@ -31,6 +31,8 @@ public class SurveyController implements Serializable {
     private String trancheFilter;
     private List<DataSet> dataSets;
     private Integer selectedDataSetId;
+    private String searchQuery;
+    private boolean highPriorityOnly;
 
     // Automatically inherits settings from the "com.survey" parent logger
     private static final Logger logger = Logger.getLogger(SurveyController.class.getName());
@@ -68,6 +70,29 @@ public class SurveyController implements Serializable {
         this.selectedDataSetId = selectedDataSetId;
     }
 
+    public String getSearchQuery() {
+        return searchQuery;
+    }
+
+    public void setSearchQuery(String searchQuery) {
+        this.searchQuery = searchQuery;
+    }
+
+    public boolean isHighPriorityOnly() {
+        return highPriorityOnly;
+    }
+
+    public void setHighPriorityOnly(boolean highPriorityOnly) {
+        this.highPriorityOnly = highPriorityOnly;
+    }
+
+    public boolean isAnyFilterActive() {
+        return selectedDataSetId != null
+            || (trancheFilter != null && !trancheFilter.trim().isEmpty())
+            || (searchQuery != null && !searchQuery.trim().isEmpty())
+            || highPriorityOnly;
+    }
+
     @PostConstruct
     public void init() {
         logger.log(Level.INFO, "SurveyController init");
@@ -77,12 +102,14 @@ public class SurveyController implements Serializable {
     }
 
     public void loadReports() {
-        reports = dbService.findFiltered(selectedDataSetId, trancheFilter);
+        reports = dbService.findFiltered(selectedDataSetId, trancheFilter, searchQuery, highPriorityOnly);
     }
 
     public void clearFilter() {
         this.selectedDataSetId = null;
         this.trancheFilter = null;
+        this.searchQuery = null;
+        this.highPriorityOnly = false;
         loadReports();
     }
 

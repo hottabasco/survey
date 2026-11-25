@@ -41,9 +41,11 @@ The Application implements the following functionality:
 
 2. Filter, Display, Edit and Add survey records
 
-3. User Managment
+3. User Managment: CRUD for users
 
-4. Can load csv files into the database where csv data is structured as per the survey_report table,
+4. Copy button, makes survey data available for pasting into LibreOffice Writer document.
+
+5. Can load csv files into the database where csv data is structured as per the survey_report table,
     except that the csv data is not expected to contain a 'data_set_id' field. 
     The csv loader works as follows:
     a. prompt for a filename and path for a csv file that contains survey data set to be loaded.
@@ -53,6 +55,9 @@ The Application implements the following functionality:
     e. If the file cannot be read, display an error message then abandon the data load.
     f. Create a new record in the data_set database table, using the name and description input by the user. 
     g. Load CSV data into the survey_report table, setting survey_report.data_set.data_set_id
+
+Next enhancement:
+  Adding search/sort enhancements
 
 JSF application structure:
 ./src
