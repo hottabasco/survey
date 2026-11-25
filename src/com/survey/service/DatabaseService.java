@@ -95,7 +95,7 @@ public class DatabaseService implements Serializable {
 	public List<DataSet> findActiveDataSets() {
 		List<DataSet> list = new ArrayList<>();
 		String sql = "SELECT data_set_id, data_set_name, data_set_description, start_date, end_date " +
-					 "FROM public.data_set " +
+					 "FROM public.survey_data_set " +
 					 "WHERE start_date <= CURRENT_DATE " +
 					 "AND (end_date IS NULL OR end_date >= CURRENT_DATE) " +
 					 "ORDER BY data_set_id DESC";
@@ -134,7 +134,7 @@ public class DatabaseService implements Serializable {
 			"sr.\"Maintenance Required\", sr.\"Priority\", sr.\"Tranche\", sr.\"Notes\", sr.data_set_id, " +
 			"ds.data_set_name, ds.data_set_description " +
 			"FROM public.survey_report sr " +
-			"LEFT JOIN public.data_set ds ON sr.data_set_id = ds.data_set_id " +
+			"LEFT JOIN public.survey_data_set ds ON sr.data_set_id = ds.data_set_id " +
 			"WHERE 1=1 "
 		);
 
@@ -206,7 +206,7 @@ public class DatabaseService implements Serializable {
 	public List<DataSet> findAllDataSets() {
 		List<DataSet> list = new ArrayList<>();
 		String sql = "SELECT data_set_id, data_set_name, data_set_description, start_date, end_date " +
-					 "FROM public.data_set ORDER BY data_set_id DESC";
+					 "FROM public.survey_data_set ORDER BY data_set_id DESC";
 		try (Connection conn = getConnection();
 			 PreparedStatement ps = conn.prepareStatement(sql);
 			 ResultSet rs = ps.executeQuery()) {
@@ -229,7 +229,7 @@ public class DatabaseService implements Serializable {
 
 	public void saveDataSet(DataSet ds) throws SQLException {
 		if (ds.getDataSetId() == null) {
-			String sql = "INSERT INTO public.data_set (data_set_name, data_set_description, start_date, end_date) " +
+			String sql = "INSERT INTO public.survey_data_set (data_set_name, data_set_description, start_date, end_date) " +
 						 "VALUES (?, ?, ?, ?)";
 			try (Connection conn = getConnection();
 				 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -241,7 +241,7 @@ public class DatabaseService implements Serializable {
 				ps.executeUpdate();
 			}
 		} else {
-			String sql = "UPDATE public.data_set " +
+			String sql = "UPDATE public.survey_data_set " +
 						 "SET data_set_name = ?, data_set_description = ?, start_date = ?, end_date = ? " +
 						 "WHERE data_set_id = ?";
 			try (Connection conn = getConnection();
@@ -406,7 +406,7 @@ public class DatabaseService implements Serializable {
 	}
 
 	public int importSurveyDataSet(String dataSetName, String dataSetDescription, List < SurveyReport > records) throws SQLException {
-		String insertDataSetSql = "INSERT INTO public.data_set (data_set_name, data_set_description) VALUES (?, ?)";
+		String insertDataSetSql = "INSERT INTO public.survey_data_set (data_set_name, data_set_description) VALUES (?, ?)";
                 String insertReportSql = "INSERT INTO public.survey_report " +
                         "(item_id, \"Type\", \"Element Type\", \"Location\", \"Description\", \"Maintenance Required\", \"Priority\", \"Tranche\", \"Notes\", data_set_id) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";

@@ -10,10 +10,10 @@ survey_report:
     "Priority" boolean,
     "Tranche" character varying COLLATE pg_catalog."default",
     "Notes" character varying COLLATE pg_catalog."default",
-    data_set_id integer NOT NULL,
+    "data_set_id" integer NOT NULL,
     CONSTRAINT survey_report_pkey PRIMARY KEY (data_set_id, item_id),
     CONSTRAINT survey_report_data_set_id_fkey FOREIGN KEY (data_set_id)
-        REFERENCES public.data_set (data_set_id) MATCH SIMPLE
+        REFERENCES public.survey_data_set (data_set_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 
@@ -28,7 +28,7 @@ usr:
     "end_date" date,
     CONSTRAINT usr_pkey PRIMARY KEY (usr_id)
 
-data_set:
+survey_data_set:
     data_set_id serial NOT NULL,
     data_set_name character varying(20) COLLATE pg_catalog."default",
     data_set_description text COLLATE pg_catalog."default" NOT NULL,
@@ -36,10 +36,24 @@ data_set:
     end_date date,
     CONSTRAINT data_set_pkey PRIMARY KEY (data_set_id)
 
+contractor:
+    "contractor_id" serial NOT NULL,
+    "business_name" character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    "contact_name"  character varying(20) COLLATE pg_catalog."default",
+    "trade"         character varying(20) COLLATE pg_catalog."default",
+    "email_address" character varying(30) COLLATE pg_catalog."default",
+    "phone"         character varying(20) COLLATE pg_catalog."default",
+    "address"       character varying(80) COLLATE pg_catalog."default",
+    "notes"         text                  COLLATE pg_catalog."default",
+    "start_date"    date NOT NULL DEFAULT CURRENT_DATE,
+    "end_date"      date,    
+    CONSTRAINT contractor_pkey PRIMARY KEY (contractor_id)
+
+
 The Application implements the following functionality: 
 1. User Login
 
-2. Filter, Display, Edit and Add survey records
+2. Display, Filter, Search, Sort, Edit and Add survey records
 
 3. User Managment: CRUD for users
 
@@ -53,11 +67,11 @@ The Application implements the following functionality:
     c. Prompt for a description for the data set to be loaded
     d. Reads the csv file
     e. If the file cannot be read, display an error message then abandon the data load.
-    f. Create a new record in the data_set database table, using the name and description input by the user. 
-    g. Load CSV data into the survey_report table, setting survey_report.data_set.data_set_id
+    f. Create a new record in the survey_data_set database table, using the name and description input by the user. 
+    g. Load CSV data into the survey_report table, setting survey_report.data_set_id to the id from survey_data_set table
 
 Next enhancement:
-  Adding search/sort enhancements
+   Contractor Management
 
 JSF application structure:
 ./src
