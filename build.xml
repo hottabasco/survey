@@ -21,7 +21,7 @@
     </target>
 
     <target name="compile" depends="init">
-        <javac srcdir="${src.dir}" destdir="${build.dir}/WEB-INF/classes" classpathref="compile.classpath" includeantruntime="false" source="17" target="17"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}/WEB-INF/classes" classpathref="compile.classpath" includeantruntime="false" release="25"/>
         <copy todir="${build.dir}/WEB-INF/classes">
             <fileset dir="${src.dir}">
                 <exclude name="**/*.java"/>
