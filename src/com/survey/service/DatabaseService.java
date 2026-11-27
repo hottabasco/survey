@@ -16,6 +16,7 @@ import com.survey.model.User;
 import org.mindrot.jbcrypt.BCrypt; // From jbcrypt-0.4.j
 import java.time.LocalDate;
 import com.survey.model.DataSet;
+import com.survey.model.Contractor;
 
 @ApplicationScoped
 public class DatabaseService implements Serializable {
@@ -476,4 +477,110 @@ public class DatabaseService implements Serializable {
 		}
 	}
 
+	public List<Contractor> findAllContractors() {
+		List<Contractor> list = new ArrayList<>();
+		String sql = "SELECT contractor_id, business_name, contact_name, trade, email_address, " +
+					 "phone, address, notes, start_date, end_date " +
+					 "FROM public.contractor ORDER BY business_name ASC";
+		try (Connection conn = getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql);
+			 ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				list.add(mapContractor(rs));
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "Error fetching all contractors", e);
+		}
+		return list;
+	}
+
+	public List<Contractor> findActiveContractors() {
+		List<Contractor> list = new ArrayList<>();
+		String sql = "SELECT contractor_id, business_name, contact_name, trade, email_address, " +
+					 "phone, address, notes, start_date, end_date " +
+					 "FROM public.contractor " +
+					 "WHERE start_date <= CURRENT_DATE " +
+					 "AND (end_date IS NULL OR end_date >= CURRENT_DATE) " +
+					 "ORDER BY business_name ASC";
+		try (Connection conn = getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql);
+			 ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				list.add(mapContractor(rs));
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "Error fetching active contractors", e);
+		}
+		return list;
+	}
+
+	private Contractor mapContractor(ResultSet rs) throws SQLException {
+		Contractor c = new Contractor();
+		c.setContractorId(rs.getInt("contractor_id"));
+		c.setBusinessName(rs.getString("business_name"));
+		c.setContactName(rs.getString("contact_name"));
+		c.setTrade(rs.getString("trade"));
+		c.setEmailAddress(rs.getString("email_address"));
+		c.setPhone(rs.getString("phone"));
+		c.setAddress(rs.getString("address"));
+		c.setNotes(rs.getString("notes"));
+		Date sd = rs.getDate("start_date");
+		c.setStartDate(sd != null ? sd.toLocalDate() : null);
+		Date ed = rs.getDate("end_date");
+		c.setEndDate(ed != null ? ed.toLocalDate() : null);
+		return c;
+	}
+
+	public void saveContractor(Contractor c) throws SQLException {
+		if (c.getContractorId() == null) {
+			String sql = "INSERT INTO public.contractor " +
+						 "(business_name, contact_name, trade, email_address, phone, address, notes, start_date, end_date) " +
+						 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			try (Connection conn = getConnection();
+				 PreparedStatement ps = conn.prepareStatement(sql)) {
+				setContractorParams(ps, c);
+				ps.executeUpdate();
+			}
+		} else {
+			String sql = "UPDATE public.contractor SET " +
+						 "business_name = ?, contact_name = ?, trade = ?, email_address = ?, " +
+						 "phone = ?, address = ?, notes = ?, start_date = ?, end_date = ? " +
+						 "WHERE contractor_id = ?";
+			try (Connection conn = getConnection();
+				 PreparedStatement ps = conn.prepareStatement(sql)) {
+				setContractorParams(ps, c);
+				ps.setInt(10, c.getContractorId());
+				ps.executeUpdate();
+			}
+		}
+	}
+
+	private void setContractorParams(PreparedStatement ps, Contractor c) throws SQLException {
+		ps.setString(1, c.getBusinessName().trim());
+		ps.setString(2, trimOrNull(c.getContactName()));
+		ps.setString(3, trimOrNull(c.getTrade()));
+		ps.setString(4, trimOrNull(c.getEmailAddress()));
+		ps.setString(5, trimOrNull(c.getPhone()));
+		ps.setString(6, trimOrNull(c.getAddress()));
+		ps.setString(7, trimOrNull(c.getNotes()));
+		ps.setDate(8, c.getStartDate() != null ? Date.valueOf(c.getStartDate()) : Date.valueOf(LocalDate.now()));
+		if (c.getEndDate() != null) {
+			ps.setDate(9, Date.valueOf(c.getEndDate()));
+		} else {
+			ps.setNull(9, Types.DATE);
+		}
+	}
+
+	public void deleteContractor(Integer contractorId) throws SQLException {
+		String sql = "DELETE FROM public.contractor WHERE contractor_id = ?";
+		try (Connection conn = getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql)) {
+			ps.setInt(1, contractorId);
+			ps.executeUpdate();
+		}
+	}
+
+	private String trimOrNull(String s) {
+		return (s == null || s.trim().isEmpty()) ? null : s.trim();
+	}
 }

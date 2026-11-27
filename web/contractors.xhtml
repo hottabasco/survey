@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Contractor Management</title>
+    <meta charset="UTF-8"/>
+    <h:outputStylesheet library="css" name="style.css" />
+</h:head>
+
+<h:body>
+    <p:growl id="growlMessages" showDetail="true" life="4000" />
+
+    <h2>Contractors Management</h2>
+
+    <div class="main-layout">
+        <!-- Left Form: Create / Update Contractor -->
+        <h:form id="contractorForm" styleClass="left-panel">
+            <p:panel header="Create / Update Contractor">
+                <p:panelGrid columns="2" layout="flex" styleClass="ui-fluid"
+                             columnClasses="col-12 md:col-4, col-12 md:col-8">
+                    <p:outputLabel for="contractorId" value="Contractor ID:"/>
+                    <p:inputText id="contractorId" value="#{empty contractorController.selectedContractor.contractorId ? 'Auto-generated' : contractorController.selectedContractor.contractorId}" disabled="true"/>
+
+                    <p:outputLabel for="businessName" value="Business Name:"/>
+                    <p:inputText id="businessName" value="#{contractorController.selectedContractor.businessName}" maxlength="20" required="true" placeholder="Max 20 chars"/>
+
+                    <p:outputLabel for="contactName" value="Contact Name:"/>
+                    <p:inputText id="contactName" value="#{contractorController.selectedContractor.contactName}" maxlength="20" placeholder="Max 20 chars"/>
+
+                    <p:outputLabel for="trade" value="Trade:"/>
+                    <p:inputText id="trade" value="#{contractorController.selectedContractor.trade}" maxlength="20" placeholder="e.g. Electrical, Plumbing"/>
+
+                    <p:outputLabel for="email" value="Email Address:"/>
+                    <p:inputText id="email" value="#{contractorController.selectedContractor.emailAddress}" maxlength="30" placeholder="Max 30 chars"/>
+
+                    <p:outputLabel for="phone" value="Phone:"/>
+                    <p:inputText id="phone" value="#{contractorController.selectedContractor.phone}" maxlength="20" placeholder="Max 20 chars"/>
+
+                    <p:outputLabel for="address" value="Address:"/>
+                    <p:inputText id="address" value="#{contractorController.selectedContractor.address}" maxlength="80" placeholder="Max 80 chars"/>
+
+                    <p:outputLabel for="notes" value="Notes:"/>
+                    <p:inputTextarea id="notes" value="#{contractorController.selectedContractor.notes}" rows="2"/>
+
+                    <p:outputLabel for="startDate" value="Start Date:"/>
+                    <p:datePicker id="startDate" value="#{contractorController.selectedContractor.startDate}" pattern="yyyy-MM-dd" required="true"/>
+
+                    <p:outputLabel for="endDate" value="End Date:"/>
+                    <p:datePicker id="endDate" value="#{contractorController.selectedContractor.endDate}" pattern="yyyy-MM-dd" showButtonBar="true"/>
+                </p:panelGrid>
+
+                <div class="action-container" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;">
+                    <p:commandButton value="Save Contractor" action="#{contractorController.saveContractor()}" 
+                                     update="contractorForm :contractorsTableForm:contractorsTable :growlMessages" icon="pi pi-check" style="width: auto;"/>
+                    <p:commandButton value="New / Clear" action="#{contractorController.prepareNewContractor()}" 
+                                     update="contractorForm" icon="pi pi-refresh" styleClass="ui-button-secondary" style="width: auto;" process="@this"/>
+                    <p:commandButton value="Delete" action="#{contractorController.deleteContractor()}" 
+                                     update="contractorForm :contractorsTableForm:contractorsTable :growlMessages" icon="pi pi-trash" 
+                                     styleClass="ui-button-danger" style="width: auto;" process="@this"
+                                     rendered="#{not empty contractorController.selectedContractor.contractorId}"
+                                     onclick="return confirm('Are you sure you want to delete this contractor?');" />
+                </div>
+            </p:panel>
+        </h:form>
+
+        <!-- Right Table: Contractor List -->
+        <h:form id="contractorsTableForm" styleClass="right-panel">
+            <p:dataTable id="contractorsTable" value="#{contractorController.contractors}" var="c"
+                         paginator="true" rows="10"
+                         selectionMode="single" selection="#{contractorController.selectedContractor}" rowKey="#{c.contractorId}">
+                <p:ajax event="rowSelect" update=":contractorForm" />
+
+                <p:column headerText="ID" sortBy="#{c.contractorId}" width="55"><h:outputText value="#{c.contractorId}"/></p:column>
+                <p:column headerText="Business Name" sortBy="#{c.businessName}"><h:outputText value="#{c.businessName}"/></p:column>
+                <p:column headerText="Contact" sortBy="#{c.contactName}"><h:outputText value="#{c.contactName}"/></p:column>
+                <p:column headerText="Trade" sortBy="#{c.trade}"><h:outputText value="#{c.trade}"/></p:column>
+                <p:column headerText="Email"><h:outputText value="#{c.emailAddress}"/></p:column>
+                <p:column headerText="Phone"><h:outputText value="#{c.phone}"/></p:column>
+                <p:column headerText="Status" sortBy="#{c.endDate}" width="110">
+                    <h:outputText value="#{empty c.endDate ? 'Active' : 'Ended: '.concat(c.endDate)}"/>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+    </div>
+
+    <!-- Bottom Footer Bar -->
+    <h:form id="logoutForm">
+        <div class="page-footer">
+            <span>
+                Logged in as: <strong>#{loginController.currentUser.firstName} #{loginController.currentUser.lastName}</strong>
+                <span style="color: #6c757d; font-size: 0.9em;">(#{loginController.currentUser.role})</span>
+            </span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <p:button value="Back to Survey Reports" outcome="index" icon="pi pi-arrow-left" styleClass="ui-button-outlined" />
+                <p:commandButton value="Logout" action="#{loginController.logout()}" icon="pi pi-sign-out" styleClass="ui-button-secondary ui-button-outlined" process="@this" />
+            </div>
+        </div>
+    </h:form>
+</h:body>
+</html>
+

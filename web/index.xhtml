@@ -247,6 +247,12 @@
                 </span>
                 <div style="display: flex; align-items: center; gap: 10px;">
 
+                 <p:button value="Manage Contractors" 
+                           outcome="contractors" 
+                           icon="pi pi-briefcase" 
+                           styleClass="ui-button-outlined"
+                           rendered="#{loginController.canEdit}" />
+
                    <p:button value="Import CSV" 
                        outcome="import" 
                        icon="pi pi-upload" 
